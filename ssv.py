@@ -59,7 +59,7 @@ class Unit(TypedDict):
 class SSV(SSPStandard):
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.__mode in ['w', 'a']:
@@ -143,3 +143,6 @@ class SSV(SSPStandard):
 
     def add_unit(self, name: str, base_unit: dict):
         self.__units.append(Unit(name=name, base_unit=BaseUnit(base_unit)))
+
+    def __check_compliance__(self):
+        pass

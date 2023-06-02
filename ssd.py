@@ -5,19 +5,7 @@ from pathlib import Path, PosixPath
 from typing import TypedDict, List
 
 
-class Annotations:
-    pass
-
-
-class MappingEntry(TypedDict):
-    source: str
-    target: str
-    suppress_unit_conversion: bool
-    annotations: Annotations
-    transformation: Transformation
-
-
-class SSM(SSPStandard):
+class SSD(SSPStandard):
 
     def __enter__(self):
         return self
@@ -35,7 +23,6 @@ class SSM(SSPStandard):
         self.__tree = None
         self.__root = None
 
-        self.__mappings: List[MappingEntry] = []
         self.__annotations = []
 
         if mode == 'r' or mode == 'a':
@@ -46,12 +33,6 @@ class SSM(SSPStandard):
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
         self.__root = self.__tree.getroot()
-
-        mappings = self.__root.findall('ssm:MappingEntry', self.namespaces)
-        for entry in mappings:
-            self.__mappings.append(MappingEntry(source=entry.attrib.get('source'), target=entry.attrib.get('target'),
-                                                suppress_unit_conversion=False, annotations=Annotations(),
-                                                transformation=Transformation()))
 
     def __write__(self):
         pass

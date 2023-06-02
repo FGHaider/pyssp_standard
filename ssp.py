@@ -13,7 +13,7 @@ class SSP(SSPStandard):
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.temp_dir)
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, mode='r'):
         self.temp_dir = tempfile.mkdtemp()
         self.file_path = file_path
 
