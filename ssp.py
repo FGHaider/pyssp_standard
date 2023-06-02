@@ -3,6 +3,7 @@ import xml.etree.cElementTree as ET
 from pathlib import Path, PosixPath
 from typing import TypedDict, List
 from parameter_types import ParameterType, Real, Integer, String, Binary, Enumeration, Boolean
+from dataclasses import dataclass, fields, asdict
 
 
 class Parameter(TypedDict):
@@ -10,17 +11,43 @@ class Parameter(TypedDict):
     value: ParameterType
 
 
-class BaseUnit(TypedDict):
-    kg: str#int
-    m: str#int
-    s: str#int
-    A: str#int
-    K: str#int
-    mol: str#int
-    cd: str#int
-    rad: str#int
-    factor: str#float
-    offset: str#float
+@dataclass
+class BaseUnit:
+    kg: int
+    m: int
+    s: int
+    A: int
+    K: int
+    mol: int
+    cd: int
+    rad: int
+    factor: float
+    offset: float
+
+    def __init__(self, base_unit: dict):
+        for field_obj in fields(self):
+            field_name = field_obj.name
+            if field_name in base_unit:
+                value = base_unit[field_name]
+                field_type = field_obj.type
+                if not isinstance(value, field_type):
+                    try:
+                        value = field_type(value)
+                    except (TypeError, ValueError):
+                        raise ValueError(f"Invalid value type for {field_name}. Expected {field_type}.")
+                setattr(self, field_name, value)
+            else:
+                setattr(self, field_name, None)
+
+    def to_dict(self):
+        data_dict = {}
+        for field_obj in fields(self):
+            field_name = field_obj.name
+            value = getattr(self, field_name)
+            if value is not None:
+                value = str(value)
+                data_dict[field_name] = value
+        return data_dict
 
 
 class Unit(TypedDict):
@@ -70,11 +97,7 @@ class SSV(SSPStandard):
         for unit in unit_set:
             name = unit.attrib.get('name')
             base_unit = unit.findall('BaseUnit')[0]
-            base_unit_obj = BaseUnit(kg=base_unit.attrib.get('kg'), m=base_unit.attrib.get('m'),
-                                     s=base_unit.attrib.get('s'), A=base_unit.attrib.get('A'),
-                                     K=base_unit.attrib.get('K'), mol=base_unit.attrib.get('mol'),
-                                     cd=base_unit.attrib.get('cd'), rad=base_unit.attrib.get('rad'),
-                                     factor=base_unit.attrib.get('factor'), offset=base_unit.attrib.get('offset'))
+            base_unit_obj = BaseUnit(base_unit.attrib)
             self.__units.append(Unit(name=name, base_unit=base_unit_obj))
 
     def __write__(self):
