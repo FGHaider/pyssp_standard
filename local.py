@@ -7,8 +7,8 @@ def main():
     test_ssv = r"embrace/resources/RAPID_Systems_2021-03-29_Test_1.ssv"
     test_ssp = r"embrace.ssp"
     test_ssm = r"embrace/resources/ECS_HW.ssm"
-    with SSM(test_ssm) as ssm:
-        pass
+    with SSV(test_ssv) as file:
+        print(file.parameters)
 
 
 if __name__ == "__main__":

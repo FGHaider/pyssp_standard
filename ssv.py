@@ -2,14 +2,15 @@ import xml.etree.cElementTree as ET
 from pathlib import Path, PosixPath
 from typing import TypedDict, List
 from parameter_types import ParameterType, Real, Integer, String, Binary, Enumeration, Boolean
-from dataclasses import dataclass, fields
-
+from dataclasses import dataclass, asdict
+import xmlschema
 from utils import SSPStandard
 
 
 class Parameter(TypedDict):
     name: str
-    value: ParameterType
+    type_name: str
+    type_value: ParameterType
 
 
 @dataclass
@@ -26,29 +27,18 @@ class BaseUnit:
     offset: float
 
     def __init__(self, base_unit: dict):
-        for field_obj in fields(self):
-            field_name = field_obj.name
-            if field_name in base_unit:
-                value = base_unit[field_name]
-                field_type = field_obj.type
+        for field_name, field_type in self.__annotations__.items():
+            value = base_unit.get(field_name)
+            if value is not None:
                 if not isinstance(value, field_type):
                     try:
                         value = field_type(value)
                     except (TypeError, ValueError):
                         raise ValueError(f"Invalid value type for {field_name}. Expected {field_type}.")
                 setattr(self, field_name, value)
-            else:
-                setattr(self, field_name, None)
 
     def to_dict(self):
-        data_dict = {}
-        for field_obj in fields(self):
-            field_name = field_obj.name
-            value = getattr(self, field_name)
-            if value is not None:
-                value = str(value)
-                data_dict[field_name] = value
-        return data_dict
+        return {k: str(v) for k, v in asdict(self).items() if v is not None}
 
 
 class Unit(TypedDict):
@@ -76,7 +66,7 @@ class SSV(SSPStandard):
             param = list(parameter)[0]
             param_type = param.tag.split('}')[-1]
             param_attr = self.__create_parameter__(param_type, param.attrib)
-            self.__parameters.append(Parameter(name=name, value=param_attr))
+            self.__parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
 
         units = self.__root.findall('Units', self.namespaces)
         unit_set = units[0].findall('Unit', self.namespaces)
@@ -87,10 +77,25 @@ class SSV(SSPStandard):
             self.__units.append(Unit(name=name, base_unit=base_unit_obj))
 
     def __write__(self):
-        pass
+        self.__root = ET.Element('ssv:ParameterSet', attrib={'version': '1.0',
+                                                             'xlmns:ssv': self.namespaces['ssv'],
+                                                             'xlmns:ssc': self.namespaces['ssc']})
+        for prefix, url in self.namespaces.items():
+            ET.register_namespace(prefix, url)
+
+        parameters_entry = ET.SubElement(self.__root, 'ssv:Parameters')
+        for param in self.__parameters:
+            parameter_entry = ET.SubElement(parameters_entry, 'ssv:Parameter', attrib={'name': param.get('name')})
+            value_entry = ET.SubElement(parameter_entry, f'ssv:{param["type_name"]}', attrib=param["type_value"])
+
+        units_entry = ET.SubElement(self.__root, 'ssv:Units')
+        for unit in self.__units:
+            unit_entry = ET.SubElement(units_entry, 'ssv:Unit', attrib={'name': unit.get('name')})
+            base_unit_entry = ET.SubElement(unit_entry, 'ssv:BaseUnit', attrib=unit.get('base_unit').to_dict())
 
     def __save__(self):
-        pass
+        tree = ET.ElementTree(self.__root)
+        tree.write(self.file_path, encoding='utf-8', xml_declaration=True)
 
     @staticmethod
     def __create_parameter__(ptype, attributes):
@@ -98,18 +103,17 @@ class SSV(SSPStandard):
         name = attributes.get('name')
         unit = attributes.get('unit')
         mimetype = attributes.get('mem-type')
-        if ptype == 'Real':
-            return Real(value=value, unit=unit)
-        if ptype == 'Integer':
-            return Integer(value=value)
-        if ptype == 'Boolean':
-            return Boolean(value=value)
-        if ptype == 'String':
-            return String(value=value)
-        if ptype == 'Enumeration':
-            return Enumeration(value=value, name=name)
-        if ptype == 'Binary':
-            return Binary(value=value, mimetype=mimetype)
+
+        parameter_types = {
+            'Real': lambda: Real(value=value, unit=unit),
+            'Integer': lambda: Integer(value=value),
+            'Boolean': lambda: Boolean(value=value),
+            'String': lambda: String(value=value),
+            'Enumeration': lambda: Enumeration(value=value, name=name),
+            'Binary': lambda: Binary(value=value, mimetype=mimetype)
+        }
+
+        return parameter_types.get(ptype, lambda: None)()
 
     def __init__(self, file_path, mode='r'):
         self.__mode = mode
@@ -139,10 +143,11 @@ class SSV(SSPStandard):
         return self.__units
 
     def add_parameter(self, name: str, ptype: str = 'Real', value: dict = None):
-        self.__parameters.append(Parameter(name=name, value=self.__create_parameter__(ptype, value)))
+        self.__parameters.append(Parameter(name=name, type_name=ptype,
+                                           type_value=self.__create_parameter__(ptype, value)))
 
     def add_unit(self, name: str, base_unit: dict):
         self.__units.append(Unit(name=name, base_unit=BaseUnit(base_unit)))
 
     def __check_compliance__(self):
-        pass
+        xmlschema.validate(self.file_path, self.schemas['ssv'])
