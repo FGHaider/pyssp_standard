@@ -67,5 +67,22 @@ class SSM(SSPStandard, SSPFile):
                                             annotations=Annotations(),
                                             transformation=Transformation()))
 
-    def edit_mapping(self, *, target=None, source=None):
-        pass
+    def edit_mapping(self, edit_target=True, *, target=None, source=None, transformation=None):
+        # TODO possibly merge to one single function under add_mapping?
+        found = False
+        for idx, entry in enumerate(self.__mappings):
+            if edit_target and entry.get('target') == target:
+                found = True
+                break
+            elif not edit_target and entry.get('source') == source:
+                found = True
+                break
+
+        if found:
+            pass
+        else:
+            raise Exception("The target or source was not found, there is nothing to edit")
+
+
+
+
