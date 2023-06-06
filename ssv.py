@@ -1,10 +1,9 @@
 import xml.etree.cElementTree as ET
-from pathlib import Path, PosixPath
 from typing import TypedDict, List
 from parameter_types import ParameterType, Real, Integer, String, Binary, Enumeration, Boolean
 from dataclasses import dataclass, asdict
 import xmlschema
-from utils import SSPStandard
+from utils import SSPStandard, SSPFile
 
 
 class Parameter(TypedDict):
@@ -46,14 +45,7 @@ class Unit(TypedDict):
     base_unit: BaseUnit
 
 
-class SSV(SSPStandard):
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.__mode in ['w', 'a']:
-            self.__save__()
+class SSV(SSPStandard, SSPFile):
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
@@ -93,10 +85,6 @@ class SSV(SSPStandard):
             unit_entry = ET.SubElement(units_entry, 'ssv:Unit', attrib={'name': unit.get('name')})
             base_unit_entry = ET.SubElement(unit_entry, 'ssv:BaseUnit', attrib=unit.get('base_unit').to_dict())
 
-    def __save__(self):
-        tree = ET.ElementTree(self.__root)
-        tree.write(self.file_path, encoding='utf-8', xml_declaration=True)
-
     @staticmethod
     def __create_parameter__(ptype, attributes):
         value = attributes.get('value')
@@ -115,24 +103,13 @@ class SSV(SSPStandard):
 
         return parameter_types.get(ptype, lambda: None)()
 
-    def __init__(self, file_path, mode='r'):
-        self.__mode = mode
-        if type(file_path) is not PosixPath:
-            file_path = Path(file_path)
-        self.file_path = file_path
-
-        self.__tree = None
-        self.__root = None
-
+    def __init__(self, *args):
         self.__parameters: List[Parameter] = []
         self.__enumerations = []
         self.__units: List[Unit] = []
         self.__annotations = []
 
-        if mode == 'r' or mode == 'a':
-            self.__read__()
-        elif mode == 'w':
-            self.__write__()
+        super().__init__(*args)
 
     @property
     def parameters(self):

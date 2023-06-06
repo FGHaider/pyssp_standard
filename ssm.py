@@ -1,8 +1,7 @@
 import xmlschema
 from transformation_types import Transformation
-from utils import SSPStandard
+from utils import SSPStandard, SSPFile
 import xml.etree.cElementTree as ET
-from pathlib import Path, PosixPath
 from typing import TypedDict, List
 
 # TODO - handle transformation entry and read
@@ -29,31 +28,13 @@ class MappingEntry(TypedDict):
     transformation: Transformation
 
 
-class SSM(SSPStandard):
+class SSM(SSPStandard, SSPFile):
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.__mode in ['w', 'a']:
-            self.__save__()
-
-    def __init__(self, file_path, mode='r'):
-        self.__mode = mode
-        if type(file_path) is not PosixPath:
-            file_path = Path(file_path)
-        self.file_path = file_path
-
-        self.__tree = None
-        self.__root = None
-
+    def __init__(self, *args):
         self.__mappings: List[MappingEntry] = []
         self.__annotations = []
 
-        if mode == 'r' or mode == 'a':
-            self.__read__()
-        elif mode == 'w':
-            self.__write__()
+        super().__init__(*args)
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
@@ -72,10 +53,6 @@ class SSM(SSPStandard):
         for mapping in self.__mappings:
             mapping_entry = ET.SubElement(self.__root, 'ssm:MappingEntry', attrib={'target': mapping.get('target'),
                                                                                    'source': mapping.get('source')})
-
-    def __save__(self):
-        tree = ET.ElementTree(self.__root)
-        tree.write(self.file_path, encoding='utf-8', xml_declaration=True)
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssv'])
