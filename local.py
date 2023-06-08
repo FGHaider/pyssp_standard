@@ -11,7 +11,7 @@ def main():
     test_fmu = "embrace/resources/0001_ECS_HW.fmu"
     with FMU(test_fmu) as file:
         print(file)
-        print(file.parameters)
+        print(file.get_variables('parameter', 'fixed'))
 
 
 if __name__ == "__main__":

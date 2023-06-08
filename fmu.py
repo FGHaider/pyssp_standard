@@ -11,7 +11,6 @@ class ScalarVariable(TypedDict):
     description: str
     causality: str
     variability: str
-    type_declaration: dict
 
 
 class VariableList(list):
@@ -24,6 +23,7 @@ class VariableList(list):
                Name: {item['name']}
         Description: {item['description']}
         Variability: {item['variability']}
+          Causality: {item['causality']}
             """
         return print_out
 
@@ -44,30 +44,22 @@ class FMU:
                Filepath: {self.file_path}
         """
 
-    def __init__(self, file_path, mode='r'):
+    def __init__(self, file_path):
         """
         This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
          primarily be considered as a debugging tool for looking of model input, outputs and parameters.
         :param file_path: file path to the target FMU
-        :param mode: Mode to open file in, currently only read mode is available
         """
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)
+            assert file_path.suffix == '.fmu'
         self.temp_dir = tempfile.mkdtemp()
         self.file_path = file_path
         self.model_description_file = None
 
-        self.__parameters: VariableList[ScalarVariable] = VariableList()
-        self.__inputs: VariableList[ScalarVariable] = VariableList()
-        self.__outputs: VariableList[ScalarVariable] = VariableList()
-        self.__other: VariableList[ScalarVariable] = VariableList()
-
+        self.__variables: VariableList[ScalarVariable] = VariableList()
         self.model_name = None
         self.fmi_version = None
-
-        if mode != 'r':
-            raise Exception('Only read mode is possible with FMUs.')
-
         self.__read__()
 
     def __read__(self):
@@ -88,30 +80,26 @@ class FMU:
             description = scalar.get('description')
             causality = scalar.get('causality')
             variability = scalar.get('variability')
-            #type_declaration = list(scalar.iter())
-            scalar_variable = ScalarVariable(name=name, description=description, variability=variability,
-                                             type_declaration={}, causality=causality)
-            if causality == 'parameter':
-                self.__parameters.append(scalar_variable)
-            elif causality == 'input':
-                self.__inputs.append(scalar_variable)
-            elif causality == 'output':
-                self.__outputs.append(scalar_variable)
-            else:
-                self.__other.append(scalar_variable)
+            scalar_variable = ScalarVariable(name=name, description=description,
+                                             variability=variability, causality=causality)
+            self.__variables.append(scalar_variable)
 
     @property
     def parameters(self):
-        return self.__parameters
+        return VariableList([item for item in self.__variables if item['causality'] == 'parameter'])
 
     @property
     def outputs(self):
-        return self.__outputs
+        return VariableList([item for item in self.__variables if item['causality'] == 'output'])
 
     @property
     def inputs(self):
-        return self.__inputs
+        return VariableList([item for item in self.__variables if item['causality'] == 'input'])
 
-    @property
-    def other(self):
-        return self.__other
+    def get_variables(self, causality=None, variability=None):
+        return VariableList([item for item in self.__variables
+                             if (causality is None or item['causality'] == causality) and
+                             (variability is None or item['variability'] == variability)])
+
+    def variables(self):
+        return self.__variables
