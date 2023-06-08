@@ -9,9 +9,9 @@ def main():
     test_ssp = "embrace.ssp"
     test_ssm = "embrace/resources/ECS_HW.ssm"
     test_fmu = "embrace/resources/0001_ECS_HW.fmu"
-    with FMU(test_fmu) as file:
+    with SSM(test_ssm) as file:
         print(file)
-        print(file.get_variables('parameter', 'fixed'))
+        print(file.mappings)
 
 
 if __name__ == "__main__":

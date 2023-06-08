@@ -28,11 +28,11 @@ class Annotations:
 
     def __init__(self):
         self.__count = 0
-        self.__root = ET.Element('ssc:Annotations')
+        self.root = ET.Element('ssc:Annotations')
 
     def add_annotation(self, annotation: Annotation):
         self.__count += 1
-        self.__root.append(annotation.root)
+        self.root.append(annotation.root)
 
     def is_empty(self):
         return True if self.__count == 0 else False
