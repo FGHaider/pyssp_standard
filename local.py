@@ -1,13 +1,16 @@
 from ssp import SSP
 from ssv import SSV
 from ssm import SSM
+from fmu import FMU
 
 
 def main():
-    test_ssv = r"embrace/resources/RAPID_Systems_2021-03-29_Test_1.ssv"
-    test_ssp = r"embrace.ssp"
-    test_ssm = r"embrace/resources/ECS_HW.ssm"
-    with SSV(test_ssv) as file:
+    test_ssv = "embrace/resources/RAPID_Systems_2021-03-29_Test_1.ssv"
+    test_ssp = "embrace.ssp"
+    test_ssm = "embrace/resources/ECS_HW.ssm"
+    test_fmu = "embrace/resources/0001_ECS_HW.fmu"
+    with FMU(test_fmu) as file:
+        print(file)
         print(file.parameters)
 
 

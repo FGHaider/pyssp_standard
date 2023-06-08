@@ -14,6 +14,20 @@ class ScalarVariable(TypedDict):
     type_declaration: dict
 
 
+class VariableList(list):
+
+    def __repr__(self):
+        print_out = """"""
+        for item in self:
+            print_out += f"""
+        ___________________________________________________________________________________________
+               Name: {item['name']}
+        Description: {item['description']}
+        Variability: {item['variability']}
+            """
+        return print_out
+
+
 class FMU:
 
     def __enter__(self):
@@ -21,6 +35,14 @@ class FMU:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.temp_dir)
+
+    def __repr__(self):
+        return f"""
+        Functional Mockup Unit:
+             Model Name: {self.model_name}
+            FMI Version: {self.fmi_version}
+               Filepath: {self.file_path}
+        """
 
     def __init__(self, file_path, mode='r'):
         """
@@ -35,10 +57,13 @@ class FMU:
         self.file_path = file_path
         self.model_description_file = None
 
-        self.__parameters = []
-        self.__inputs = []
-        self.__outputs = []
-        self.__other = []
+        self.__parameters: VariableList[ScalarVariable] = VariableList()
+        self.__inputs: VariableList[ScalarVariable] = VariableList()
+        self.__outputs: VariableList[ScalarVariable] = VariableList()
+        self.__other: VariableList[ScalarVariable] = VariableList()
+
+        self.model_name = None
+        self.fmi_version = None
 
         if mode != 'r':
             raise Exception('Only read mode is possible with FMUs.')
@@ -52,6 +77,9 @@ class FMU:
         self.model_description_file = list(Path(self.temp_dir).glob('modelDescription.xml'))[0]
         tree = ET.parse(self.model_description_file)
         root = tree.getroot()
+
+        self.model_name = root.get('modelName')
+        self.fmi_version = root.get('fmiVersion')
 
         model_variables = root.findall('ModelVariables')[0]
         scalar_variables = model_variables.findall('ScalarVariable')

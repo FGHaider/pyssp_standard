@@ -1,7 +1,7 @@
 import xmlschema
 
 from parameter_types import ParameterType
-from ssm import Annotations
+from common_content_ssc import Annotations
 from utils import SSPStandard, SSPFile
 import xml.etree.cElementTree as ET
 from typing import TypedDict, List

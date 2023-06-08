@@ -1,25 +1,12 @@
 import xmlschema
 from transformation_types import Transformation
+from common_content_ssc import Annotations
 from utils import SSPStandard, SSPFile
 import xml.etree.cElementTree as ET
 from typing import TypedDict, List
 
+
 # TODO - handle transformation entry and read
-
-
-class EmptyElement(ET.Element):
-
-    def __init__(self, tag, attrib=None, **kwargs):
-        super().__init__(tag, attrib, **kwargs)
-
-    def __repr__(self):
-        return ET.tostring(self, encoding='utf-8', short_empty_elements=True)
-
-
-class Annotations:
-    pass
-
-
 class MappingEntry(TypedDict):
     source: str
     target: str
@@ -67,9 +54,11 @@ class SSM(SSPStandard, SSPFile):
                                             annotations=Annotations(),
                                             transformation=Transformation()))
 
-    def edit_mapping(self, edit_target=True, *, target=None, source=None, transformation=None):
+    def edit_mapping(self, edit_target=True, *, target=None, source=None,
+                     transformation=None, suppress_unit_conversion=None, annotations=None):
         # TODO possibly merge to one single function under add_mapping?
         found = False
+        idx = 0
         for idx, entry in enumerate(self.__mappings):
             if edit_target and entry.get('target') == target:
                 found = True
@@ -79,7 +68,18 @@ class SSM(SSPStandard, SSPFile):
                 break
 
         if found:
-            pass
+            mapping_found = self.__mappings[idx]
+            if target is not None:
+                mapping_found['target'] = target
+            if target is not None:
+                mapping_found['source'] = source
+            if transformation is not None:
+                mapping_found['transformation'] = transformation
+            if suppress_unit_conversion is not None:
+                mapping_found['suppress_unit_conversion'] = suppress_unit_conversion
+            if annotations is not None:
+                mapping_found['annotations'] = annotations
+
         else:
             raise Exception("The target or source was not found, there is nothing to edit")
 

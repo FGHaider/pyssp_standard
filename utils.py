@@ -1,6 +1,7 @@
 from pathlib import Path, PosixPath
 from abc import ABC, abstractmethod
 import xml.etree.cElementTree as ET
+from xml.etree import cElementTree as ET
 
 
 class SSPFile(ABC):
@@ -61,3 +62,12 @@ class SSPStandard:
                'ssm': __resource_path / 'SystemStructureParameterMapping.xsd',
                'ssv': __resource_path / 'SystemStructureParameterValues.xsd',
                'ssb': __resource_path / 'SystemStructureSignalDictionary.xsd'}
+
+
+class EmptyElement(ET.Element):
+
+    def __init__(self, tag, attrib=None, **kwargs):
+        super().__init__(tag, attrib, **kwargs)
+
+    def __repr__(self):
+        return ET.tostring(self, encoding='utf-8', short_empty_elements=True)
