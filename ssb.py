@@ -20,7 +20,7 @@ class SSB(SSPStandard, SSPFile):
         self.top_level_meta_data = None
 
         self.__annotations = []
-        self.__dictionary_entry = List[DictionaryEntry]
+        self.__dictionary_entry: List[DictionaryEntry] = []
         self.__enumerations = []
         self.__units = []
 
@@ -38,7 +38,14 @@ class SSB(SSPStandard, SSPFile):
                                                            annotations=Annotations()))
 
     def __write__(self):
-        pass
+        self.__root = ET.Element('ssb:SignalDictionary', attrib={'version': '1.0',
+                                                                 'xlmns:ssb': self.namespaces['ssb'],
+                                                                 'xlmns:ssc': self.namespaces['ssc']})
+        # Add BaseElement and ATopLevelMetaData
+        for entry in self.__dictionary_entry:
+            dictionary_entry = ET.SubElement(self.__root, 'ssb:DictionaryEntry', attrib={'name': entry.get('name')})
+
+
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssb'])
