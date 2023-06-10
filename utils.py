@@ -64,6 +64,17 @@ class SSPStandard:
                'ssb': __resource_path / 'SystemStructureSignalDictionary.xsd'}
 
 
+class SSPElement(ABC):
+
+    @abstractmethod
+    def to_element(self) -> ET.Element:
+        pass
+
+    @abstractmethod
+    def from_element(self, element: ET.Element):
+        pass
+
+
 class EmptyElement(ET.Element):
 
     def __init__(self, tag, attrib=None, **kwargs):

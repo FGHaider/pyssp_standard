@@ -89,8 +89,8 @@ class SSM(SSPStandard, SSPFile):
     def add_mapping(self, source, target, suppress_unit_conversion=False, transformation=None, annotations=None):
         self.__mappings.append(MappingEntry(source=source, target=target,
                                             suppress_unit_conversion=suppress_unit_conversion,
-                                            annotations=Annotations() if transformation is None else transformation,
-                                            transformation=Transformation() if annotations is None else annotations))
+                                            annotations=Transformation() if transformation is None else transformation,
+                                            transformation=Annotations() if annotations is None else annotations))
 
     def edit_mapping(self, edit_target=True, *, target=None, source=None,
                      transformation: Transformation = None, suppress_unit_conversion=None,

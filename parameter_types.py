@@ -2,7 +2,7 @@ from typing import TypedDict
 import xml.etree.cElementTree as ET
 
 
-class ParameterT:
+class ParameterType:
 
     def __init__(self, parameter_type=None, attributes=None):
 
@@ -14,7 +14,7 @@ class ParameterT:
             self.parameter = self.__create_parameter__(parameter_type, attributes)
 
     def element(self):
-        return ET.Element(f'ssc:{self.parameter_type}', attrib=self.parameter)
+        return ET.Element(f'ssv:{self.parameter_type}', attrib=self.parameter)
 
     @staticmethod
     def __create_parameter__(ptype, attributes):
@@ -35,32 +35,32 @@ class ParameterT:
         return parameter_types.get(ptype, lambda: None)()
 
 
-class ParameterType(TypedDict):
+class ParameterValueType(TypedDict):
     pass
 
 
-class Real(ParameterType):
+class Real(ParameterValueType):
     value: float
     unit: str
 
 
-class Integer(ParameterType):
+class Integer(ParameterValueType):
     value: int
 
 
-class Boolean(ParameterType):
+class Boolean(ParameterValueType):
     value: bool
 
 
-class String(ParameterType):
+class String(ParameterValueType):
     value: str
 
 
-class Enumeration(ParameterType):
+class Enumeration(ParameterValueType):
     value: str
     name: str
 
 
-class Binary(ParameterType):
+class Binary(ParameterValueType):
     mimetype: str  # default 'application/octet-stream'
     value: str  # should be hexadecimal

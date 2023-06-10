@@ -13,6 +13,19 @@ class DictionaryEntry(TypedDict):
     annotations: Annotations
 
 
+class DictionaryEntryList(list):
+
+    def __repr__(self):
+        print_out = """"""
+        for item in self:
+            print_out += f"""
+        ___________________________________________________________________________________________
+        Name: {item['name']}
+        Type: {item['type_entry']}
+            """
+        return print_out
+
+
 class SSB(SSPStandard, SSPFile):
 
     def __init__(self, *args):
@@ -44,8 +57,6 @@ class SSB(SSPStandard, SSPFile):
         # Add BaseElement and ATopLevelMetaData
         for entry in self.__dictionary_entry:
             dictionary_entry = ET.SubElement(self.__root, 'ssb:DictionaryEntry', attrib={'name': entry.get('name')})
-
-
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssb'])

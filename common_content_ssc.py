@@ -1,5 +1,5 @@
 import datetime
-from typing import TypedDict
+from typing import TypedDict, List
 import xml.etree.cElementTree as ET
 
 
@@ -34,16 +34,15 @@ class Annotations:
         self.__count += 1
         self.root.append(annotation.root)
 
+    def element(self):
+        return self.root
+
     def is_empty(self):
         return True if self.__count == 0 else False
 
 
-class ID:
-    pass
-
-
 class BaseElement(TypedDict):
-    id: ID
+    id: str
     description: str
 
 
@@ -54,3 +53,27 @@ class TopLevelMetaData(TypedDict):
     license: str
     generation_tool: str
     generation_date_and_time: datetime.datetime
+
+
+class Item(TypedDict):
+    name: str
+    value: int
+
+
+class Enumeration(TypedDict):
+    base_element: BaseElement
+    name: str
+    items: List[Item]
+    annotations: Annotations
+
+
+class Enumerations:
+
+    def __init__(self, enumerations: List[Enumeration] = None):
+        self.__root = ET.Element('ssc:Enumerations')
+        if Enumerations is not None:
+            for enum in enumerations:
+                self.__root.append(enum)
+
+    def add_enumeration(self, enum: Enumeration):
+        self.__root.append(enum)
