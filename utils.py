@@ -1,6 +1,5 @@
 from pathlib import Path, PosixPath
 from abc import ABC, abstractmethod
-import xml.etree.cElementTree as ET
 from xml.etree import cElementTree as ET
 
 
@@ -29,15 +28,13 @@ class SSPFile(ABC):
         self.__file_path = file_path
 
         self.__tree = None
-        self.__root = None
+        self.root = None
 
         if mode == 'r' or mode == 'a':
             self.__read__()
-        elif mode == 'w':
-            self.__write__()
 
     def __save__(self):
-        tree = ET.ElementTree(self.__root)
+        tree = ET.ElementTree(self.root)
         tree.write(self.__file_path, encoding='utf-8', xml_declaration=True)
 
     def __enter__(self):
@@ -45,6 +42,7 @@ class SSPFile(ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.__mode in ['w', 'a']:
+            self.__write__()
             self.__save__()
 
 
@@ -55,7 +53,7 @@ class SSPStandard:
                   'ssm': 'http://ssp-standard.org/SSP1/SystemStructureParameterMapping',
                   'ssd': 'http://ssp-standard.org/SSP1/SystemStructureDescription'}
 
-    __resource_path = Path('resources')
+    __resource_path = Path(r'..\resources')
     schemas = {'ssc': __resource_path / 'SystemStructureCommon.xsd',
                'ssd': __resource_path / 'SystemStructureDescription.xsd',
                'ssd11': __resource_path / 'SystemStructureDescription11.xsd',

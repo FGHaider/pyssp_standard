@@ -3,7 +3,7 @@ from typing import TypedDict, List
 from parameter_types import ParameterType, Real, Integer, String, Binary, Enumeration, Boolean
 import xmlschema
 
-from unit import BaseUnit, Unit
+from unit import BaseUnit, Unit, Units
 from utils import SSPStandard, SSPFile
 
 
@@ -29,9 +29,7 @@ class SSV(SSPStandard, SSPFile):
             self.__parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
 
         units = self.__root.findall('Units', self.namespaces)
-        unit_set = units[0].findall('Unit', self.namespaces)
-        for unit in unit_set:
-            self.__units.append(Unit(unit))
+        self.__units = Units(units[0])
 
     def __write__(self):
         self.__root = ET.Element('ssv:ParameterSet', attrib={'version': '1.0',
@@ -45,14 +43,12 @@ class SSV(SSPStandard, SSPFile):
             parameter_entry = ET.SubElement(parameters_entry, 'ssv:Parameter', attrib={'name': param.get('name')})
             parameter_entry.append(param["type_value"].element())
 
-        units_entry = ET.SubElement(self.__root, 'ssv:Units')
-        for unit in self.__units:
-            units_entry.append(unit.to_element())
+        self.__root.append(self.__units.element())
 
     def __init__(self, *args):
         self.__parameters: List[Parameter] = []
         self.__enumerations = []
-        self.__units: List[Unit] = []
+        self.__units: Units
         self.__annotations = []
 
         super().__init__(*args)
@@ -70,7 +66,7 @@ class SSV(SSPStandard, SSPFile):
                                            type_value=ParameterType(ptype, value)))
 
     def add_unit(self, name: str, base_unit: dict):
-        self.__units.append(Unit(name, base_unit=BaseUnit(base_unit)))
+        self.__units.add_unit(Unit(name, base_unit=BaseUnit(base_unit)))
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssv'])

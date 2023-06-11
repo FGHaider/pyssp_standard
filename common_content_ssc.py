@@ -71,7 +71,7 @@ class Enumerations:
 
     def __init__(self, enumerations: List[Enumeration] = None):
         self.__root = ET.Element('ssc:Enumerations')
-        if Enumerations is not None:
+        if enumerations is not None:
             for enum in enumerations:
                 self.__root.append(enum)
 

@@ -10,13 +10,14 @@ def read_file():
 
 def test_read_correct_file(read_file):  # Asserts that reading a known correct file does not raise an exception
     error = None
-    try:
-        with SSV(read_file) as file:
-            pass
+    #try:
+    with SSV(read_file) as file:
+        print(file)
+        #file.__check_compliance__()
 
-    except Exception as e:
-        error = e
-    assert error is None
+    #except Exception as e:
+    #     error = e
+    #assert error is None
 
 
 

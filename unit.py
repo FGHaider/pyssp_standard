@@ -1,6 +1,6 @@
 from dataclasses import dataclass, asdict
 from xml.etree import cElementTree as ET
-from utils import SSPElement
+from utils import SSPElement, SSPStandard
 
 
 @dataclass
@@ -54,3 +54,27 @@ class Unit(SSPElement):
         self.__name = element.attrib.get('name')
         base_unit = element.findall('BaseUnit')[0]
         self.__base_unit = BaseUnit(base_unit.attrib)
+
+
+class Units(SSPStandard):
+
+    def __init__(self, element: ET.Element = None):
+        self.__units = []
+        self.__root = None
+
+        if element is not None:
+            units = element.findall('Unit', self.namespaces)
+            for unit in units:
+                self.__units.append(Unit(unit))
+
+    def add_unit(self, unit: Unit):
+        self.__units.append(unit)
+
+    def element(self):
+        self.__root = ET.Element('ssc:Units')
+        for unit in self.__units:
+            self.__root.append(unit)
+        return self.__root
+
+    def is_empty(self):
+        return True if len(self.__units) == 0 else False
