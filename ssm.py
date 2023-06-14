@@ -1,6 +1,5 @@
 import xmlschema
-from transformation_types import Transformation, LinearTransformation, BooleanMappingTransformation, \
-    EnumerationMappingTransformation, IntegerMappingTransformation
+from transformation_types import Transformation
 from common_content_ssc import Annotations, Annotation
 from utils import SSPStandard, SSPFile
 import xml.etree.cElementTree as ET
@@ -32,7 +31,7 @@ class SSM(SSPStandard, SSPFile):
 
     def __init__(self, *args):
         self.__mappings: MappingList[MappingEntry] = MappingList()
-        self.__annotations = []
+        self.__annotations: Annotations
 
         super().__init__(*args)
 

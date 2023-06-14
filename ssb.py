@@ -54,8 +54,8 @@ class SSB(SSPStandard, SSPFile):
 
     def __write__(self):
         self.root = ET.Element('ssb:SignalDictionary', attrib={'version': '1.0',
-                                                                 'xlmns:ssb': self.namespaces['ssb'],
-                                                                 'xlmns:ssc': self.namespaces['ssc']})
+                                                               'xlmns:ssb': self.namespaces['ssb'],
+                                                               'xlmns:ssc': self.namespaces['ssc']})
         # Add BaseElement and ATopLevelMetaData
         for entry in self.__dictionary_entry:
             dictionary_entry = ET.SubElement(self.root, 'ssb:DictionaryEntry', attrib={'name': entry.get('name')})

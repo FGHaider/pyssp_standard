@@ -1,6 +1,6 @@
 import xml.etree.cElementTree as ET
 from typing import TypedDict, List
-from parameter_types import ParameterType, Real, Integer, String, Binary, Enumeration, Boolean
+from parameter_types import ParameterType
 import xmlschema
 
 from unit import BaseUnit, Unit, Units
