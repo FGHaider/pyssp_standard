@@ -1,11 +1,13 @@
 from typing import TypedDict
-import xml.etree.cElementTree as ET
+from lxml import etree as ET
 
 
 class Transformation:
 
     def __init__(self, transformation_type=None, attributes=None, transformation: ET.Element = None):
 
+        self.transformation_type = None
+        self.transformation = None
         if transformation is not None:
             self.transformation_type = transformation.tag.split('}')[-1]
             self.transformation = self.__create_transformation__(self.transformation_type, transformation.attrib)

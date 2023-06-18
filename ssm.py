@@ -2,7 +2,8 @@ import xmlschema
 from transformation_types import Transformation
 from common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
 from utils import SSPStandard, SSPFile
-import xml.etree.cElementTree as et
+from lxml import etree as et
+from lxml.etree import QName
 from typing import TypedDict
 
 
@@ -34,7 +35,7 @@ class SSM(SSPStandard, SSPFile):
         self.__base_element: BaseElement = BaseElement()
         self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__mappings: MappingList[MappingEntry] = MappingList()
-        self.__annotations: Annotations
+        self.__annotations: Annotations = Annotations()
 
         super().__init__(*args)
 
@@ -55,11 +56,11 @@ class SSM(SSPStandard, SSPFile):
 
     def __read__(self):
         self.__tree = et.parse(self.file_path)
-        self.__root = self.__tree.getroot()
-        self.__top_level_metadata.update(self.__root.attrib)
-        self.__base_element.update(self.__root.attrib)
+        self.root = self.__tree.getroot()
+        self.__top_level_metadata.update(self.root.attrib)
+        self.__base_element.update(self.root.attrib)
 
-        mappings = self.__root.findall('ssm:MappingEntry', self.namespaces)
+        mappings = self.root.findall('ssm:MappingEntry', self.namespaces)
         for entry in mappings:
             transformation = entry.findall('ssc:Transformation', self.namespaces)
             trans = None
@@ -81,14 +82,13 @@ class SSM(SSPStandard, SSPFile):
 
     def __write__(self):
         et.register_namespace('ssm', self.namespaces['ssm'])
-        self.__root = et.Element('ssm:ParameterMapping', attrib={'version': '1.0',
-                                                                 'xlmns:ssm': self.namespaces['ssm'],
-                                                                 'xlmns:ssc': self.namespaces['ssc']})
-        self.__root = self.__top_level_metadata.update_root(self.__root)
-        self.__root = self.__base_element.update_root(self.__root)
+        et.register_namespace('scc', self.namespaces['ssc'])
+        self.root = et.Element(QName(self.namespaces['ssm'], 'ParameterMapping'), attrib={'version': '1.0'})
+        self.root = self.__top_level_metadata.update_root(self.root)
+        self.root = self.__base_element.update_root(self.root)
 
         for mapping in self.__mappings:
-            mapping_entry = et.SubElement(self.__root, 'ssm:MappingEntry', attrib={'target': mapping.get('target'),
+            mapping_entry = et.SubElement(self.root, QName(self.namespaces['ssm'], 'MappingEntry'), attrib={'target': mapping.get('target'),
                                                                                    'source': mapping.get('source')})
             if mapping['transformation'] is not Transformation():
                 mapping_entry.append(mapping['transformation'].element())
@@ -105,8 +105,8 @@ class SSM(SSPStandard, SSPFile):
     def add_mapping(self, source, target, suppress_unit_conversion=False, transformation=None, annotations=None):
         self.__mappings.append(MappingEntry(source=source, target=target,
                                             suppress_unit_conversion=suppress_unit_conversion,
-                                            annotations=Transformation() if transformation is None else transformation,
-                                            transformation=Annotations() if annotations is None else annotations))
+                                            transformation=Transformation() if transformation is None else transformation,
+                                            annotations=Annotations() if annotations is None else annotations))
 
     def edit_mapping(self, edit_target=True, *, target=None, source=None,
                      transformation: Transformation = None, suppress_unit_conversion=None,

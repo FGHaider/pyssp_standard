@@ -1,7 +1,10 @@
 import datetime
 from typing import TypedDict, List
-import xml.etree.cElementTree as ET
+from lxml import etree as ET
+from lxml.etree import QName
 from dataclasses import dataclass, asdict, fields
+
+from utils import SSPStandard
 
 
 class Annotation:
@@ -25,11 +28,11 @@ class Annotation:
         self.root.append(ET.Element(name, attrib=attributes))
 
 
-class Annotations:
+class Annotations(SSPStandard):
 
     def __init__(self):
         self.__count = 0
-        self.root = ET.Element('ssc:Annotations')
+        self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotations'))
 
     def add_annotation(self, annotation: Annotation):
         self.__count += 1
