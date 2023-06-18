@@ -53,7 +53,7 @@ class SSPStandard:
                   'ssm': 'http://ssp-standard.org/SSP1/SystemStructureParameterMapping',
                   'ssd': 'http://ssp-standard.org/SSP1/SystemStructureDescription'}
 
-    __resource_path = Path(r'..\resources')
+    __resource_path = Path(__file__).parent / 'resources'
     schemas = {'ssc': __resource_path / 'SystemStructureCommon.xsd',
                'ssd': __resource_path / 'SystemStructureDescription.xsd',
                'ssd11': __resource_path / 'SystemStructureDescription11.xsd',

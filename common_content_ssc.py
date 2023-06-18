@@ -1,6 +1,7 @@
 import datetime
 from typing import TypedDict, List
 import xml.etree.cElementTree as ET
+from dataclasses import dataclass, asdict, fields
 
 
 class Annotation:
@@ -41,18 +42,47 @@ class Annotations:
         return True if self.__count == 0 else False
 
 
-class BaseElement(TypedDict):
-    id: str
-    description: str
+@dataclass
+class BaseElement:
+    id: str = ""
+    description: str = ""
+
+    def __repr__(self):
+        return f"ID: {self.id} \nDescription: {self.description}"
+
+    def update(self, attributes: dict):
+        for key, value in attributes.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def dict(self):
+        return {key: str(value) for key, value in asdict(self).items()}
 
 
-class TopLevelMetaData(TypedDict):
-    author: str
-    file_version: str
-    copyright: str
-    license: str
-    generation_tool: str
-    generation_date_and_time: datetime.datetime
+@dataclass
+class TopLevelMetaData:
+    author: str = ""
+    file_version: str = ""
+    copyright: str = ""
+    license: str = ""
+    generation_tool: str = ""
+    generation_date_and_time: datetime.datetime = datetime.datetime.now()
+
+    def __repr__(self):
+        base_txt = ""
+        for field in fields(self):
+            reformatted_text = field.name.replace('_', ' ')
+            reformatted_text = reformatted_text.capitalize()
+            base_txt += f"{reformatted_text}: {getattr(self, field.name)}\n"
+        return base_txt
+
+    def update(self, attributes: dict):
+        for key, value in attributes.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    def dict(self):
+        return {key: str(value) for key, value in asdict(self).items()}
 
 
 class Item(TypedDict):

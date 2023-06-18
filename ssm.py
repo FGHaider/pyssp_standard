@@ -1,8 +1,8 @@
 import xmlschema
 from transformation_types import Transformation
-from common_content_ssc import Annotations, Annotation
+from common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
 from utils import SSPStandard, SSPFile
-import xml.etree.cElementTree as ET
+from lxml import etree as et
 from typing import TypedDict
 
 
@@ -30,6 +30,9 @@ class MappingList(list):
 class SSM(SSPStandard, SSPFile):
 
     def __init__(self, *args):
+        self.__version: str
+        self.__base_element: BaseElement = BaseElement()
+        self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__mappings: MappingList[MappingEntry] = MappingList()
         self.__annotations: Annotations
 
@@ -42,9 +45,19 @@ class SSM(SSPStandard, SSPFile):
             Mappings: {len(self.mappings)}
         """
 
+    @property
+    def BaseElement(self):
+        return self.__base_element
+
+    @property
+    def TopLevelMetaData(self):
+        return self.__top_level_metadata
+
     def __read__(self):
-        self.__tree = ET.parse(self.file_path)
+        self.__tree = et.parse(self.file_path)
         self.__root = self.__tree.getroot()
+        self.__top_level_metadata.update(self.__root.attrib)
+        self.__base_element.update(self.__root.attrib)
 
         mappings = self.__root.findall('ssm:MappingEntry', self.namespaces)
         for entry in mappings:
@@ -67,11 +80,11 @@ class SSM(SSPStandard, SSPFile):
                                                 transformation=trans if trans is not None else Transformation()))
 
     def __write__(self):
-        self.__root = ET.Element('ssm:ParameterMapping', attrib={'version': '1.0',
+        self.__root = et.Element('ssm:ParameterMapping', attrib={'version': '1.0',
                                                                  'xlmns:ssm': self.namespaces['ssm'],
                                                                  'xlmns:ssc': self.namespaces['ssc']})
         for mapping in self.__mappings:
-            mapping_entry = ET.SubElement(self.__root, 'ssm:MappingEntry', attrib={'target': mapping.get('target'),
+            mapping_entry = et.SubElement(self.__root, 'ssm:MappingEntry', attrib={'target': mapping.get('target'),
                                                                                    'source': mapping.get('source')})
             if mapping['transformation'] is not Transformation():
                 mapping_entry.append(mapping['transformation'].element())
