@@ -96,10 +96,16 @@ class FMU:
     def inputs(self):
         return VariableList([item for item in self.__variables if item['causality'] == 'input'])
 
-    def get_variables(self, causality=None, variability=None):
+    def get_variables(self, causality: str = None, variability: str = None):
+        """
+        Fetch a variable from the FMU, based on the attributes' causality, variability.
+        :param causality: parameter, variable ...
+        :param variability: fixed, tunable
+        :return:
+        """
         return VariableList([item for item in self.__variables
                              if (causality is None or item['causality'] == causality) and
-                             (variability is None or item['variability'] == variability)])
+                                (variability is None or item['variability'] == variability)])
 
     def variables(self):
         return self.__variables
