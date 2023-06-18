@@ -20,10 +20,10 @@ def test_variable_unpacking(read_file):  # Asserts that reading a known correct 
 
 def test_get_variables(read_file):
     with FMU(read_file) as file:
-        no_matches = file.get_variables('none', 'none')
-        matches_causality = file.get_variables(causality='parameter')
-        matches_variability = file.get_variables(variability='tunable')
-        matches = file.get_variables('parameter', 'tunable')
+        no_matches = file.get('none', 'none')
+        matches_causality = file.get(causality='parameter')
+        matches_variability = file.get(variability='tunable')
+        matches = file.get('parameter', 'tunable')
     assert len(no_matches) == 0
     assert len(matches_variability) >= len(matches)
     assert len(matches_causality) >= len(matches)

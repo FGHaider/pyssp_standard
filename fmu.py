@@ -2,11 +2,12 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path, PosixPath
-import xml.etree.cElementTree as ET
-from typing import TypedDict
+from dataclasses import dataclass
+from lxml import etree as et
 
 
-class ScalarVariable(TypedDict):
+@dataclass
+class ScalarVariable:
     name: str
     description: str
     causality: str
@@ -20,10 +21,10 @@ class VariableList(list):
         for item in self:
             print_out += f"""
         ___________________________________________________________________________________________
-               Name: {item['name']}
-        Description: {item['description']}
-        Variability: {item['variability']}
-          Causality: {item['causality']}
+               Name: {item.name}
+        Description: {item.description}
+        Variability: {item.variability}
+          Causality: {item.causality}
             """
         return print_out
 
@@ -48,11 +49,12 @@ class FMU:
         """
         This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
          primarily be considered as a debugging tool for looking of model input, outputs and parameters.
-        :param file_path: file path to the target FMU
+        :param file_path: filepath to the target FMU.
+        :type file_path: str or PosixPath
         """
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)
-            assert file_path.suffix == '.fmu'
+
         self.temp_dir = tempfile.mkdtemp()
         self.file_path = file_path
         self.model_description_file = None
@@ -67,7 +69,7 @@ class FMU:
             zip_ref.extractall(self.temp_dir)
 
         self.model_description_file = list(Path(self.temp_dir).glob('modelDescription.xml'))[0]
-        tree = ET.parse(self.model_description_file)
+        tree = et.parse(self.model_description_file)
         root = tree.getroot()
 
         self.model_name = root.get('modelName')
@@ -85,27 +87,34 @@ class FMU:
             self.__variables.append(scalar_variable)
 
     @property
-    def parameters(self):
-        return VariableList([item for item in self.__variables if item['causality'] == 'parameter'])
+    def parameters(self) -> VariableList:
+        return VariableList([item for item in self.__variables if item.causality == 'parameter'])
 
     @property
-    def outputs(self):
-        return VariableList([item for item in self.__variables if item['causality'] == 'output'])
+    def outputs(self) -> VariableList:
+        return VariableList([item for item in self.__variables if item.causality == 'output'])
 
     @property
-    def inputs(self):
-        return VariableList([item for item in self.__variables if item['causality'] == 'input'])
+    def inputs(self) -> VariableList:
+        return VariableList([item for item in self.__variables if item.causality == 'input'])
 
-    def get_variables(self, causality: str = None, variability: str = None):
+    def exist(self, name: str):
+        """ Returns true if a scalar variable exist with the given name """
+        for entry in self.__variables:
+            if entry.name == name:
+                return True
+        return False
+
+    def get(self, causality: str = None, variability: str = None) -> VariableList:
         """
-        Fetch a variable from the FMU, based on the attributes' causality, variability.
-        :param causality: parameter, variable ...
-        :param variability: fixed, tunable
-        :return:
+        Get a variable from the FMU, based on the attributes' causality, variability.
+        :param causality: parameter, input etc.
+        :param variability: fixed, tunable etc.
+        :return: list of matching variables
         """
         return VariableList([item for item in self.__variables
-                             if (causality is None or item['causality'] == causality) and
-                                (variability is None or item['variability'] == variability)])
+                             if (causality is None or item.causality == causality) and
+                             (variability is None or item.variability == variability)])
 
-    def variables(self):
+    def variables(self) -> VariableList:
         return self.__variables
