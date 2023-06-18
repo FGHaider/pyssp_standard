@@ -58,6 +58,11 @@ class BaseElement:
     def dict(self):
         return {key: str(value) for key, value in asdict(self).items()}
 
+    def update_root(self, root: ET.Element):
+        for key, value in self.dict().items():
+            root.set(key, value)
+        return root
+
 
 @dataclass
 class TopLevelMetaData:
@@ -83,6 +88,11 @@ class TopLevelMetaData:
 
     def dict(self):
         return {key: str(value) for key, value in asdict(self).items()}
+
+    def update_root(self, root):
+        for key, value in self.dict().items():
+            root.set(key, value)
+        return root
 
 
 class Item(TypedDict):

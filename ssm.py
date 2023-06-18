@@ -2,7 +2,7 @@ import xmlschema
 from transformation_types import Transformation
 from common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
 from utils import SSPStandard, SSPFile
-from lxml import etree as et
+import xml.etree.cElementTree as et
 from typing import TypedDict
 
 
@@ -80,9 +80,13 @@ class SSM(SSPStandard, SSPFile):
                                                 transformation=trans if trans is not None else Transformation()))
 
     def __write__(self):
+        et.register_namespace('ssm', self.namespaces['ssm'])
         self.__root = et.Element('ssm:ParameterMapping', attrib={'version': '1.0',
                                                                  'xlmns:ssm': self.namespaces['ssm'],
                                                                  'xlmns:ssc': self.namespaces['ssc']})
+        self.__root = self.__top_level_metadata.update_root(self.__root)
+        self.__root = self.__base_element.update_root(self.__root)
+
         for mapping in self.__mappings:
             mapping_entry = et.SubElement(self.__root, 'ssm:MappingEntry', attrib={'target': mapping.get('target'),
                                                                                    'source': mapping.get('source')})
