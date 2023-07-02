@@ -1,8 +1,11 @@
 from typing import TypedDict
-import xml.etree.cElementTree as ET
+from lxml import etree as ET
+from lxml.etree import QName
+
+from utils import SSPStandard
 
 
-class ParameterType:
+class ParameterType(SSPStandard):
 
     def __init__(self, parameter_type=None, attributes=None):
 
@@ -14,7 +17,7 @@ class ParameterType:
             self.parameter = self.__create_parameter__(parameter_type, attributes)
 
     def element(self):
-        return ET.Element(f'ssv:{self.parameter_type}', attrib=self.parameter)
+        return ET.Element(QName(self.namespaces['ssv'], self.parameter_type), attrib=self.parameter)
 
     @staticmethod
     def __create_parameter__(ptype, attributes):

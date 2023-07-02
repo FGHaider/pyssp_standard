@@ -1,20 +1,22 @@
 from dataclasses import dataclass, asdict
-from xml.etree import cElementTree as ET
+from lxml import etree as ET
+from lxml.etree import QName
+
 from utils import SSPElement, SSPStandard
 
 
 @dataclass
 class BaseUnit:
-    kg: int
-    m: int
-    s: int
-    A: int
-    K: int
-    mol: int
-    cd: int
-    rad: int
-    factor: float
-    offset: float
+    kg: int = None
+    m: int = None
+    s: int = None
+    A: int = None
+    K: int = None
+    mol: int = None
+    cd: int = None
+    rad: int = None
+    factor: float = None
+    offset: float = None
 
     def __init__(self, base_unit: dict):
         for field_name, field_type in self.__annotations__.items():
@@ -31,7 +33,7 @@ class BaseUnit:
         return {k: str(v) for k, v in asdict(self).items() if v is not None}
 
 
-class Unit(SSPElement):
+class Unit(SSPElement, SSPStandard):
 
     def __init__(self, unit, base_unit: BaseUnit = None):
 
@@ -46,8 +48,8 @@ class Unit(SSPElement):
             self.__base_unit = base_unit
 
     def to_element(self):
-        unit_entry = ET.Element('ssv:Unit', attrib={'name': self.__name})
-        unit_entry.append(ET.Element('ssv:BaseUnit', attrib=self.__base_unit.to_dict()))
+        unit_entry = ET.Element(QName(self.namespaces['ssc'], 'Unit'), attrib={'name': self.__name})
+        unit_entry.append(ET.Element(QName(self.namespaces['ssc'], 'BaseUnit'), attrib=self.__base_unit.to_dict()))
         return unit_entry
 
     def from_element(self, element):
@@ -70,10 +72,10 @@ class Units(SSPStandard):
     def add_unit(self, unit: Unit):
         self.__units.append(unit)
 
-    def element(self):
-        self.__root = ET.Element('ssc:Units')
+    def element(self, parent_type='ssc'):
+        self.__root = ET.Element(QName(self.namespaces[parent_type], 'Units'))
         for unit in self.__units:
-            self.__root.append(unit)
+            self.__root.append(unit.to_element())
         return self.__root
 
     def is_empty(self):

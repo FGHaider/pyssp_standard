@@ -1,5 +1,9 @@
-import xml.etree.cElementTree as ET
+from lxml import etree as ET
 from typing import TypedDict, List
+
+from lxml.etree import QName
+
+from common_content_ssc import BaseElement, TopLevelMetaData
 from parameter_types import ParameterType
 import xmlschema
 
@@ -17,9 +21,9 @@ class SSV(SSPStandard, SSPFile):
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
-        self.__root = self.__tree.getroot()
+        self.root = self.__tree.getroot()
 
-        parameters = self.__root.findall('ssv:Parameters', self.namespaces)
+        parameters = self.root.findall('ssv:Parameters', self.namespaces)
         parameter_set = parameters[0].findall('ssv:Parameter', self.namespaces)
         for parameter in parameter_set:
             name = parameter.attrib.get('name')
@@ -28,27 +32,29 @@ class SSV(SSPStandard, SSPFile):
             param_attr = ParameterType(param_type, param.attrib)
             self.__parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
 
-        units = self.__root.findall('Units', self.namespaces)
-        self.__units = Units(units[0])
+        units = self.root.findall('ssv:Units', self.namespaces)
+        if len(units) > 0:
+            self.__units = Units(units[0])
 
     def __write__(self):
-        self.__root = ET.Element('ssv:ParameterSet', attrib={'version': '1.0',
-                                                             'xlmns:ssv': self.namespaces['ssv'],
-                                                             'xlmns:ssc': self.namespaces['ssc']})
-        for prefix, url in self.namespaces.items():
-            ET.register_namespace(prefix, url)
+        self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'), attrib={'version': '1.0', 'name': 'nan'})
+        self.root = self.__top_level_metadata.update_root(self.root)
+        self.root = self.__base_element.update_root(self.root)
 
-        parameters_entry = ET.SubElement(self.__root, 'ssv:Parameters')
+        parameters_entry = ET.SubElement(self.root, QName(self.namespaces['ssv'], 'Parameters'))
         for param in self.__parameters:
-            parameter_entry = ET.SubElement(parameters_entry, 'ssv:Parameter', attrib={'name': param.get('name')})
+            parameter_entry = ET.SubElement(parameters_entry, QName(self.namespaces['ssv'], 'Parameter'), attrib={'name': param.get('name')})
             parameter_entry.append(param["type_value"].element())
 
-        self.__root.append(self.__units.element())
+        if not self.__units.is_empty():
+            self.root.append(self.__units.element('ssv'))
 
     def __init__(self, *args):
+        self.__base_element: BaseElement = BaseElement()
+        self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__parameters: List[Parameter] = []
         self.__enumerations = []
-        self.__units: Units
+        self.__units: Units = Units()
         self.__annotations = []
 
         super().__init__(*args)
