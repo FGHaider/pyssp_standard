@@ -1,6 +1,6 @@
 from pathlib import Path, PosixPath
 from abc import ABC, abstractmethod
-from xml.etree import cElementTree as ET
+from lxml import etree as ET
 
 
 def register_namespaces():
@@ -40,8 +40,9 @@ class SSPFile(ABC):
             self.__read__()
 
     def __save__(self):
-        tree = ET.ElementTree(self.root)
-        tree.write(self.__file_path, encoding='utf-8', xml_declaration=True)
+        xml_string = ET.tostring(self.root, pretty_print=True, encoding='utf-8', xml_declaration=True)
+        with open(self.__file_path, 'wb') as file:
+            file.write(xml_string)
 
     def __enter__(self):
         register_namespaces()
@@ -80,10 +81,10 @@ class SSPElement(ABC):
         pass
 
 
-class EmptyElement(ET.Element):
+class EmptyElement(ET.ElementBase):
 
     def __init__(self, tag, attrib=None, **kwargs):
         super().__init__(tag, attrib, **kwargs)
 
     def __repr__(self):
-        return ET.tostring(self, encoding='utf-8', short_empty_elements=True)
+        return ET.tostring(self, encoding='utf-8')

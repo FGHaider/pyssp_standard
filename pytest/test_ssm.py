@@ -25,3 +25,4 @@ def test_create_basic_file():
     with SSM("./test.ssm", 'w') as f:
         f.add_mapping('dog', 'shepard')
         f.add_mapping('cat', 'odd')
+        f.__check_compliance__()

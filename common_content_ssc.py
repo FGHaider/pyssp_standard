@@ -63,18 +63,19 @@ class BaseElement:
 
     def update_root(self, root: ET.Element):
         for key, value in self.dict().items():
-            root.set(key, value)
+            if value != "":
+                root.set(key, value)
         return root
 
 
 @dataclass
 class TopLevelMetaData:
     author: str = ""
-    file_version: str = ""
+    fileversion: str = ""
     copyright: str = ""
     license: str = ""
-    generation_tool: str = ""
-    generation_date_and_time: datetime.datetime = datetime.datetime.now()
+    generationTool: str = "pyssp"
+    generationDateAndTime: datetime.datetime = datetime.datetime.now().isoformat()
 
     def __repr__(self):
         base_txt = ""
@@ -94,7 +95,8 @@ class TopLevelMetaData:
 
     def update_root(self, root):
         for key, value in self.dict().items():
-            root.set(key, value)
+            if value != "":
+                root.set(key, value)
         return root
 
 
