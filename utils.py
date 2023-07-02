@@ -3,6 +3,12 @@ from abc import ABC, abstractmethod
 from xml.etree import cElementTree as ET
 
 
+def register_namespaces():
+    ssp_standards = SSPStandard
+    for name, url in ssp_standards.namespaces.items():
+        ET.register_namespace(name, url)
+
+
 class SSPFile(ABC):
 
     @abstractmethod
@@ -38,6 +44,7 @@ class SSPFile(ABC):
         tree.write(self.__file_path, encoding='utf-8', xml_declaration=True)
 
     def __enter__(self):
+        register_namespaces()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

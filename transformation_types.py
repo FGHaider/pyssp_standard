@@ -16,7 +16,9 @@ class Transformation:
             self.transformation = self.__create_transformation__(transformation_type, attributes)
 
     def element(self):
-        return ET.Element(f'ssc:{self.transformation_type}', attrib=self.transformation)
+        if self.transformation_type is not None:
+            return ET.Element(f'ssc:{self.transformation_type}', attrib=self.transformation)
+        return None
 
     @staticmethod
     def __create_transformation__(ttype, attributes):

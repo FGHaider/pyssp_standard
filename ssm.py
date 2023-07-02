@@ -81,19 +81,23 @@ class SSM(SSPStandard, SSPFile):
                                                 transformation=trans if trans is not None else Transformation()))
 
     def __write__(self):
-        et.register_namespace('ssm', self.namespaces['ssm'])
-        et.register_namespace('scc', self.namespaces['ssc'])
+
         self.root = et.Element(QName(self.namespaces['ssm'], 'ParameterMapping'), attrib={'version': '1.0'})
         self.root = self.__top_level_metadata.update_root(self.root)
         self.root = self.__base_element.update_root(self.root)
 
         for mapping in self.__mappings:
-            mapping_entry = et.SubElement(self.root, QName(self.namespaces['ssm'], 'MappingEntry'), attrib={'target': mapping.get('target'),
-                                                                                   'source': mapping.get('source')})
+            mapping_entry = et.SubElement(self.root, QName(self.namespaces['ssm'], 'MappingEntry'),
+                                          attrib={'target': mapping.get('target'),
+                                                  'source': mapping.get('source')})
             if mapping['transformation'] is not Transformation():
-                mapping_entry.append(mapping['transformation'].element())
+                transformation_element = mapping['transformation'].element()
+                if transformation_element is not None:
+                    mapping_entry.append(transformation_element)
             if not mapping['annotations'].is_empty():
-                mapping_entry.append(mapping['annotations'].root)
+                annotation_element = mapping['annotations'].root
+                if annotation_element is not None:
+                    mapping_entry.append(annotation_element)
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssm'])

@@ -21,4 +21,7 @@ def test_read_correct_file(read_file):  # Asserts that reading a known correct f
 
 
 def test_create_basic_file():
-    pass
+
+    with SSM("./test.ssm", 'w') as f:
+        f.add_mapping('dog', 'shepard')
+        f.add_mapping('cat', 'odd')
