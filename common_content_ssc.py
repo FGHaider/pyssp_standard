@@ -7,16 +7,19 @@ from dataclasses import dataclass, asdict, fields
 from utils import SSPStandard
 
 
-class Annotation(SSPStandard):
+class Annotation(SSPStandard):  # TODO needs to read and not just create
 
-    def __init__(self, type_declaration: str):
+    def __init__(self, type_declaration):
         """
         The SSP standard allows for the addition of annotations, when created they must contain at least one annotation.
         An annotation may contain anything, however to ease its use the pyssp provides tools to add text, attributes
         elements and ET.Element.
         :param type_declaration: normalized string
         """
-        self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotation'), attrib={"type": type_declaration})
+        if type(type_declaration) is str:
+            self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotation'), attrib={"type": type_declaration})
+        elif type(type_declaration) is ET._Element:  # TODO see in documentation what is the correct method
+            self.root = type_declaration
 
     def add_element(self, element: ET.Element):
         self.root.append(element)
