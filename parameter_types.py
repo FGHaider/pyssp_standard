@@ -7,7 +7,8 @@ from utils import SSPStandard
 
 class ParameterType(SSPStandard):
 
-    def __init__(self, parameter_type=None, attributes=None):
+    def __init__(self, parameter_type=None, attributes=None, namespace='ssv'):
+        self.namespace = namespace
 
         if type(parameter_type) is ET.Element:
             self.parameter_type = parameter_type.tag.split('}')[-1]
@@ -17,7 +18,10 @@ class ParameterType(SSPStandard):
             self.parameter = self.__create_parameter__(parameter_type, attributes)
 
     def element(self):
-        return ET.Element(QName(self.namespaces['ssv'], self.parameter_type), attrib=self.parameter)
+        if self.namespace == 'ssc':
+            return ET.Element(QName(self.namespaces[self.namespace], self.parameter_type))
+        else:
+            return ET.Element(QName(self.namespaces[self.namespace], self.parameter_type), attrib=self.parameter)
 
     @staticmethod
     def __create_parameter__(ptype, attributes):

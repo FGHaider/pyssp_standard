@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict, fields
 from utils import SSPStandard
 
 
-class Annotation:
+class Annotation(SSPStandard):
 
     def __init__(self, type_declaration: str):
         """
@@ -16,7 +16,7 @@ class Annotation:
         elements and ET.Element.
         :param type_declaration: normalized string
         """
-        self.root = ET.Element('ssc:Annotation', attrib={"type": type_declaration})
+        self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotation'), attrib={"type": type_declaration})
 
     def add_element(self, element: ET.Element):
         self.root.append(element)
@@ -112,10 +112,10 @@ class Enumeration(TypedDict):
     annotations: Annotations
 
 
-class Enumerations:
+class Enumerations(SSPStandard):
 
     def __init__(self, enumerations: List[Enumeration] = None):
-        self.__root = ET.Element('ssc:Enumerations')
+        self.__root = ET.Element(QName(self.namespaces['ssc'], 'Enumerations'))
         if enumerations is not None:
             for enum in enumerations:
                 self.__root.append(enum)

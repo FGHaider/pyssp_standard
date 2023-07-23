@@ -2,6 +2,6 @@ from ssb import SSB
 
 
 def test_create_ssb():
-    with SSB('./test.ssb', 'r') as file:
-        #file.add_dictionary_entry('test_a', 'Real', {'value': 10, 'unit': 'm'})
+    with SSB('./test.ssb', 'w') as file:
+        file.add_dictionary_entry('test_a', ptype='Integer', value={"value": "10"})
         file.__check_compliance__()

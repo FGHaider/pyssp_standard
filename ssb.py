@@ -4,7 +4,8 @@ from parameter_types import ParameterType
 from common_content_ssc import Annotations, Enumerations, Annotation, Enumeration
 from unit import Unit, Units
 from utils import SSPStandard, SSPFile
-import xml.etree.cElementTree as ET
+from lxml import etree as ET
+from lxml.etree import QName
 from typing import TypedDict, List
 
 
@@ -53,19 +54,19 @@ class SSB(SSPStandard, SSPFile):
                                                            annotations=Annotations()))
 
     def __write__(self):
-        self.root = ET.Element('ssb:SignalDictionary', attrib={'version': '1.0',
-                                                               'xlmns:ssb': self.namespaces['ssb'],
-                                                               'xlmns:ssc': self.namespaces['ssc']})
+        self.root = ET.Element(QName(self.namespaces['ssb'], 'SignalDictionary'), attrib={'version': '1.0'})
         # Add BaseElement and ATopLevelMetaData
         for entry in self.__dictionary_entry:
-            dictionary_entry = ET.SubElement(self.root, 'ssb:DictionaryEntry', attrib={'name': entry.get('name')})
+            dictionary_entry = ET.Element(QName(self.namespaces['ssb'], 'DictionaryEntry'), attrib={'name': entry.get('name')})
+            dictionary_entry.append(entry["type_entry"].element())
+            self.root.append(dictionary_entry)
 
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssb'], namespaces=self.namespaces)
 
     def add_dictionary_entry(self, name: str, ptype: str, value: dict, annotations=None):
         self.__dictionary_entry.append(DictionaryEntry(name=name,
-                                                       type_entry=ParameterType(ptype, value),
+                                                       type_entry=ParameterType(ptype, value, 'ssc'),
                                                        annotations=Annotations() if annotations is None else annotations))
 
     def add_annotation(self, annotation: Annotation):
