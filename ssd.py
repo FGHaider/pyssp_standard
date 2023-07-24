@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from common_content_ssc import Enumerations, Annotations, Annotation
 from unit import Units
 from utils import SSPStandard, SSPFile
@@ -27,6 +29,10 @@ class Connection(SSPStandard):
         self.end_element = element.get('endElement')
         self.end_connector = element.get('endConnector')
 
+    def as_dict(self):
+        return {'source': self.start_element, 'signal': self.start_connector,
+                'target': self.end_element, 'receiver': self.end_connector}
+
 
 class Connector(SSPStandard):
 
@@ -41,31 +47,37 @@ class Connector(SSPStandard):
         self.name = element.get('name')
         self.kind = element.get('kind')
 
+    def as_dict(self):
+        return {'name': self.name, 'kind': self.kind}
+
 
 class Component(SSPStandard):
 
     def __init__(self, element):
         self.component_type = None
+        self.name = None
         self.source = None
         self.implementation = None
         self.connectors = []
         self.parameter_bindings = None
-
         self.annotations = None
 
         self.__read__(element)
 
     def __read__(self, element):
+        self.name = element.get('name')
         connectors = element.findall('ssd:Connectors', namespaces=self.namespaces)
         for connector in connectors[0].findall('ssd:Connector', namespaces=self.namespaces):
             self.connectors.append(Connector(connector))
+
+    def as_dict(self):
+        return {'name': self.name, 'connectors': [connector.as_dict() for connector in self.connectors]}
 
 
 class Element(SSPStandard):
 
     def __init__(self, element):
         self.components = []
-
         self.__read__(element)
 
     def __read__(self, element):
@@ -73,14 +85,17 @@ class Element(SSPStandard):
         for component in components:
             self.components.append(Component(component))
 
+    def as_dict(self):
+        return [component.as_dict() for component in self.components]
+
 
 class System(SSPStandard):
 
     def __init__(self, system_element: ET.Element):
 
         self.name = None
-        self.elements = []
-        self.connections = []
+        self.element = None
+        self.__connections = []
 
         self.connectors = []
         self.parameter_bindings = []
@@ -91,10 +106,14 @@ class System(SSPStandard):
 
     def __read__(self, element):
         elements = element.findall('ssd:Elements', namespaces=self.namespaces)
-        self.elements = Element(elements[0])
+        self.element = Element(elements[0])
         connections = element.findall('ssd:Connections', namespaces=self.namespaces)
         for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
-            self.connections.append(Connection(connection))
+            self.__connections.append(Connection(connection))
+
+    @property
+    def connections(self):
+        return self.__connections
 
 
 class DefaultExperiment(SSPStandard):
@@ -154,5 +173,57 @@ class SSD(SSPStandard, SSPFile):
     def __check_compliance__(self):
         xmlschema.validate(self.file_path, self.schemas['ssd'], namespaces=self.namespaces)
 
+    def add_connection(self, connection):
+        pass
+
+    def remove_connection(self, id):
+        pass
+
+    def connections(self):
+        return self.system.connections
+
+    def list_connectors(self, *, kind=None, name=None, parent=None, state=None):
+        """
+        Returns a list of connectors, filtered by the following optional options
+        :param kind: the kind of connector, e.g. input, output or parameter
+        :param name: the name of the connector, utilizes 'in' for lookup
+        :param parent: the name of the parent component, utilizes 'in' for lookup
+        :param state: accepted states are 'closed', 'open' or leave as None.
+            When using either of the states only connectors that are either used in
+            the connections or is used in the listed connections.
+        """
+
+        matching_connectors = {}
+        component_connectors = self.system.element.as_dict()
+        connections = [connection.as_dict() for connection in self.system.connections]
+
+        for component in component_connectors:
+            if parent is not None and parent not in component['name']:
+                continue
+
+            for connector in component['connectors']:
+                if kind is not None and kind != connector['kind']:
+                    continue
+                if name is not None and name not in connector['name']:
+                    continue
+
+                if state == 'open':
+                    pass
+                elif state == 'closed':
+                    pass
+
+                if component['name'] not in matching_connectors.keys():
+                    matching_connectors[component['name']] = []
+                matching_connectors[component['name']].append({'name': connector['name'], 'kind': connector['kind']})
+
+        return matching_connectors
+
     def __write__(self):
         pass
+
+
+if __name__ == "__main__":
+    read_file = Path("./embrace/SystemStructure.ssd")
+    # Reference file is known to be good, no error should be raised.
+    with SSD(read_file) as file:
+        print(file.list_connectors(parent='sum', kind='parameter', name='Tamb'))
