@@ -176,7 +176,7 @@ class SSD(SSPStandard, SSPFile):
     def add_connection(self, connection):
         pass
 
-    def remove_connection(self, id):
+    def remove_connection(self, name):
         pass
 
     def connections(self):
@@ -220,10 +220,3 @@ class SSD(SSPStandard, SSPFile):
 
     def __write__(self):
         pass
-
-
-if __name__ == "__main__":
-    read_file = Path("./embrace/SystemStructure.ssd")
-    # Reference file is known to be good, no error should be raised.
-    with SSD(read_file) as file:
-        print(file.list_connectors(parent='sum', kind='parameter', name='Tamb'))
