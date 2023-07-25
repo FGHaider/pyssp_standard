@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ssb:SignalDictionary xmlns:ssb="http://ssp-standard.org/SSP1/SystemStructureSignalDictionary" version="1.0">
+  <ssb:DictionaryEntry name="test_a">
+    <ssc:Integer xmlns:ssc="http://ssp-standard.org/SSP1/SystemStructureCommon"/>
+  </ssb:DictionaryEntry>
+</ssb:SignalDictionary>

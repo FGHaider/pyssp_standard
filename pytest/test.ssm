@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ssm:ParameterMapping xmlns:ssm="http://ssp-standard.org/SSP1/SystemStructureParameterMapping" version="1.0" generationTool="pyssp" generationDateAndTime="2023-07-23T16:34:59.963688">
+  <ssm:MappingEntry target="shepard" source="dog"/>
+  <ssm:MappingEntry target="odd" source="cat"/>
+</ssm:ParameterMapping>
