@@ -1,13 +1,15 @@
-from utils import SSPStandard
+
 import tempfile
 import zipfile
-from pathlib import Path, PosixPath
 import shutil
+from pathlib import Path, PosixPath
+
 from ssd import SSD
 from ssb import SSB
 from ssv import SSV
 from ssm import SSM
 from fmu import FMU
+from utils import SSPStandard
 
 
 class SSP(SSPStandard):
@@ -55,4 +57,3 @@ class SSP(SSPStandard):
     @property
     def fmu(self):
         return [FMU(file) for file in self.__fmu]
-
