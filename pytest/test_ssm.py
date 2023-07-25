@@ -1,11 +1,11 @@
 import pytest
 from pathlib import Path
-from ssm import SSM
+from pyssp.ssm import SSM
 
 
 @pytest.fixture
 def read_file():
-    return Path("../embrace/resources/ECS_HW.ssm")
+    return Path("doc/embrace/resources/ECS_HW.ssm")
 
 
 def test_read_correct_file(read_file):  # Asserts that reading a known correct file does not raise an exception

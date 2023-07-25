@@ -160,6 +160,6 @@ cython_debug/
 #.idea/
 
 # Reference models
-embrace
-embrace.ssp
-local.py
+pytest/doc/embrace
+pytest/doc/embrace.ssp
+pyssp/local.py

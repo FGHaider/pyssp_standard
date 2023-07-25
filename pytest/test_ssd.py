@@ -1,11 +1,11 @@
 import pytest
 from pathlib import Path
-from ssd import SSD
+from pyssp.ssd import SSD
 
 
 @pytest.fixture
 def read_file():
-    return Path("../embrace/SystemStructure.ssd")
+    return Path("doc/embrace/SystemStructure.ssd")
 
 
 def test_compliance_check(read_file):
