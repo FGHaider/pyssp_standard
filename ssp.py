@@ -3,6 +3,11 @@ import tempfile
 import zipfile
 from pathlib import Path, PosixPath
 import shutil
+from ssd import SSD
+from ssb import SSB
+from ssv import SSV
+from ssm import SSM
+from fmu import FMU
 
 
 class SSP(SSPStandard):
@@ -13,43 +18,41 @@ class SSP(SSPStandard):
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.temp_dir)
 
-    def __init__(self, file_path, mode='r'):
+    def __init__(self, file_path):
         self.temp_dir = tempfile.mkdtemp()
+        if type(file_path) is not PosixPath:
+            file_path = Path(file_path)
         self.file_path = file_path
-
-        self.__ssd = None
-        self.__ssv = None
-        self.__ssm = None
-        self.__ssb = None
-        self.__fmu = None
-
-    def __read__(self):
 
         with zipfile.ZipFile(self.file_path, 'r') as zip_ref:
             zip_ref.extractall(self.temp_dir)
 
-    def __write__(self):
-        pass
+        ssp_unpacked_path = Path(self.temp_dir) / self.file_path.stem
+        ssp_resource_path = ssp_unpacked_path / 'resources'
 
-    def __save__(self):
-        pass
+        self.__ssd = list(ssp_unpacked_path.glob('*.ssd'))[0]
+        self.__ssv = list(ssp_resource_path.glob('*.ssv'))
+        self.__ssm = list(ssp_resource_path.glob('*.ssm'))
+        self.__ssb = list(ssp_resource_path.glob('*.ssb'))
+        self.__fmu = list(ssp_resource_path.glob('*.fmu'))
 
     @property
     def ssd(self):
-        return self.__ssd
+        return SSD(self.__ssd)
 
     @property
     def ssv(self):
-        return self.__ssv
+        return [SSV(ssv) for ssv in self.__ssv]
 
     @property
     def ssm(self):
-        return self.__ssm
+        return [SSM(file) for file in self.__ssm]
 
     @property
     def ssb(self):
-        return self.__ssb
+        return [SSB(file) for file in self.__ssb]
 
     @property
     def fmu(self):
-        return self.__fmu
+        return [FMU(file) for file in self.__fmu]
+
