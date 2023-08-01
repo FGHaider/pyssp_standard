@@ -4,7 +4,7 @@ from lxml import etree as ET
 from lxml.etree import QName
 from dataclasses import dataclass, asdict, fields
 
-from utils import SSPStandard
+from pyssp_standard.utils import SSPStandard
 
 
 class Annotation(SSPStandard):  # TODO needs to read and not just create
