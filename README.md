@@ -1,10 +1,16 @@
 # pyssp
 [<img src="https://img.shields.io/badge/Status-In Development-orange.svg?logo=LOGO">](<LINK>)
 
-Python library to interact with files specified by the SSP standard [<img src="https://img.shields.io/badge/SSP-Standard-blue.svg?logo=LOGO">](<https://ssp-standard.org/>)
+Python pacakge to interact with files specified by the SSP standard [<img src="https://img.shields.io/badge/SSP-Standard-blue.svg?logo=LOGO">](<https://ssp-standard.org/>)
 . The libary allows for 
 the creation, reading and editing of SSV, SSM and SSB files. In addition, it allows for the reading of SSP, FMU and SSD
 files. The intended use is for pre-processing work and inspection of a given file.
+
+The package is currently in alpha, this means:
+- There will be bugs
+- The API may change radically, as a result documentation is lacking
+- Only a limited set of features have been implemented
+- License may change
 
 ## Documentation
 Here follows a number of examples of how to use the library.
@@ -13,7 +19,7 @@ Here follows a number of examples of how to use the library.
 ### SSV 
 
 #### Example
-Here a ssv file is opened and checked whether is it is compliance with SSP standard.
+Here a ssv file is opened and checked if it is compliant with the SSP standard.
 
 ```python
 with SSV(file_path) as file:
@@ -24,7 +30,7 @@ with SSV(file_path) as file:
 ### SSM
 
 #### Example
-Here a ssm file is opened and checked whether is it is compliance with SSP standard.
+Here a ssm file is opened and checked if it is compliant with the SSP standard.
 
 ```python
 with SSM(file_path) as file:
