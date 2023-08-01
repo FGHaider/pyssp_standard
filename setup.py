@@ -6,6 +6,7 @@ setup(
     version='0.1',
     license='MIT',
     description='Simple python package for reading, modifying and creating files, specified in the SSP Standard',
+    long_description=" "
     author='Fredrik Haider',
     author_email='',
     url='https://github.com/FGHaider/pyssp',
