@@ -9,7 +9,7 @@ setup(
     author='Fredrik Haider',
     author_email='',
     url='https://github.com/FGHaider/pyssp',
-    download_url='https://github.com/user/reponame/archive/v_01.tar.gz',
+    download_url='https://github.com/FGHaider/pyssp/archive/refs/tags/v_01.tar.gz',
     keywords=['SSP', 'system', 'engineering'],
     install_requires=[
         'lxml',
