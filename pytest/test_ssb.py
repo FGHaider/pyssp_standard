@@ -1,4 +1,4 @@
-from pyssp.ssb import SSB
+from py_ssp.ssb import SSB
 
 
 def test_create_ssb():

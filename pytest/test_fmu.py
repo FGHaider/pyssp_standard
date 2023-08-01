@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from pyssp.fmu import FMU
+from py_ssp.fmu import FMU
 
 
 @pytest.fixture

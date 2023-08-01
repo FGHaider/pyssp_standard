@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from pyssp.ssd import SSD
+from py_ssp.ssd import SSD
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ class Annotation(SSPStandard):  # TODO needs to read and not just create
     def __init__(self, type_declaration):
         """
         The SSP standard allows for the addition of annotations, when created they must contain at least one annotation.
-        An annotation may contain anything, however to ease its use the pyssp provides tools to add text, attributes
+        An annotation may contain anything, however to ease its use the py_ssp provides tools to add text, attributes
         elements and ET.Element.
         :param type_declaration: normalized string
         """
@@ -77,7 +77,7 @@ class TopLevelMetaData:
     fileversion: str = ""
     copyright: str = ""
     license: str = ""
-    generationTool: str = "pyssp"
+    generationTool: str = "py_ssp"
     generationDateAndTime: datetime.datetime = datetime.datetime.now().isoformat()
 
     def __repr__(self):
