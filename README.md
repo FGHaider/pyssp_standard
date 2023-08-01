@@ -1,4 +1,4 @@
-# py_ssp
+# pyssp_standard
 [<img src="https://img.shields.io/badge/Status-In Development-orange.svg?logo=LOGO">](<LINK>)
 
 Python pacakge to interact with files specified by the SSP standard [<img src="https://img.shields.io/badge/SSP-Standard-blue.svg?logo=LOGO">](<https://ssp-standard.org/>)

@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from py_ssp.ssv import SSV
+from pyssp_standard.ssv import SSV
 
 
 @pytest.fixture

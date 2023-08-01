@@ -1,7 +1,7 @@
 
 import pytest
 from pathlib import Path
-from py_ssp.ssp import SSP
+from pyssp_standard.ssp import SSP
 
 
 @pytest.fixture
