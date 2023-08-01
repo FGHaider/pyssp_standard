@@ -1,8 +1,8 @@
 from distutils.core import setup
 
 setup(
-    name='pyssp',
-    packages=['pyssp'],
+    name='py_ssp',
+    packages=['py_ssp'],
     version='0.1',
     license='MIT',
     description='Simple python package for reading, modifying and creating files, specified in the SSP Standard',
