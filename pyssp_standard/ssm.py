@@ -1,7 +1,7 @@
 import xmlschema
-from transformation_types import Transformation
-from common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
-from utils import SSPStandard, SSPFile
+from pyssp_standard.transformation_types import Transformation
+from pyssp_standard.common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
+from pyssp_standard.utils import SSPStandard, SSPFile
 from lxml import etree as et
 from lxml.etree import QName
 from typing import TypedDict

@@ -4,12 +4,12 @@ import zipfile
 import shutil
 from pathlib import Path, PosixPath
 
-from ssd import SSD
-from ssb import SSB
-from ssv import SSV
-from ssm import SSM
-from fmu import FMU
-from utils import SSPStandard
+from pyssp_standard.ssd import SSD
+from pyssp_standard.ssb import SSB
+from pyssp_standard.ssv import SSV
+from pyssp_standard.ssm import SSM
+from pyssp_standard.fmu import FMU
+from pyssp_standard.utils import SSPStandard
 
 
 class SSP(SSPStandard):

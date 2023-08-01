@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from common_content_ssc import Enumerations, Annotations, Annotation
-from unit import Units
-from utils import SSPStandard, SSPFile
+from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
+from pyssp_standard.unit import Units
+from pyssp_standard.utils import SSPStandard, SSPFile
 from lxml import etree as ET
 import xmlschema
 

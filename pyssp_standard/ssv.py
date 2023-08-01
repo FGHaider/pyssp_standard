@@ -3,12 +3,12 @@ from typing import TypedDict, List
 
 from lxml.etree import QName
 
-from common_content_ssc import BaseElement, TopLevelMetaData
-from parameter_types import ParameterType
+from pyssp_standard.common_content_ssc import BaseElement, TopLevelMetaData
+from pyssp_standard.parameter_types import ParameterType
 import xmlschema
 
-from unit import BaseUnit, Unit, Units
-from utils import SSPStandard, SSPFile
+from pyssp_standard.unit import BaseUnit, Unit, Units
+from pyssp_standard.utils import SSPStandard, SSPFile
 
 
 class Parameter(TypedDict):

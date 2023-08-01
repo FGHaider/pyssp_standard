@@ -2,7 +2,7 @@ from typing import TypedDict
 from lxml import etree as ET
 from lxml.etree import QName
 
-from utils import SSPStandard
+from pyssp_standard.utils import SSPStandard
 
 
 class ParameterType(SSPStandard):
