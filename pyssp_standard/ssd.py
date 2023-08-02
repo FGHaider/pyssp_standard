@@ -136,7 +136,7 @@ class DefaultExperiment(SSPStandard):
                 self.annotations.add_annotation(Annotation(annotation))
 
 
-class SSD(SSPStandard, SSPFile):
+class SSD(SSPFile):
 
     def __init__(self, file_path, mode='r'):
 
@@ -154,7 +154,7 @@ class SSD(SSPStandard, SSPFile):
         if mode not in ['r', 'a']:
             raise Exception('Only read mode and append mode are supported for SSD files')
 
-        super().__init__(file_path=file_path, mode=mode)
+        super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
@@ -169,9 +169,6 @@ class SSD(SSPStandard, SSPFile):
 
         self.name = self.root.get('name')
         self.version = self.root.get('version')
-
-    def __check_compliance__(self):
-        xmlschema.validate(self.file_path, self.schemas['ssd'], namespaces=self.namespaces)
 
     def add_connection(self, connection):
         pass

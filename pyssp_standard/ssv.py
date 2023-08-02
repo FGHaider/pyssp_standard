@@ -17,7 +17,7 @@ class Parameter(TypedDict):
     type_value: ParameterType
 
 
-class SSV(SSPStandard, SSPFile):
+class SSV(SSPFile):
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path)
@@ -57,7 +57,7 @@ class SSV(SSPStandard, SSPFile):
         self.__units: Units = Units()
         self.__annotations = []
 
-        super().__init__(*args)
+        super().__init__(*args, identifier='ssv')
 
     @property
     def parameters(self):
@@ -73,6 +73,3 @@ class SSV(SSPStandard, SSPFile):
 
     def add_unit(self, name: str, base_unit: dict):
         self.__units.add_unit(Unit(name, base_unit=BaseUnit(base_unit)))
-
-    def __check_compliance__(self):
-        xmlschema.validate(self.file_path, self.schemas['ssv'])

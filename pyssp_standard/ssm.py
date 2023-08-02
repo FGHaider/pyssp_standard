@@ -28,7 +28,7 @@ class MappingList(list):
         return print_out
 
 
-class SSM(SSPStandard, SSPFile):
+class SSM(SSPFile):
 
     def __init__(self, *args):
         self.__version: str
@@ -37,7 +37,7 @@ class SSM(SSPStandard, SSPFile):
         self.__mappings: MappingList[MappingEntry] = MappingList()
         self.__annotations: Annotations = Annotations()
 
-        super().__init__(*args)
+        super().__init__(*args, identifier='ssm')
 
     def __repr__(self):
         return f"""
@@ -98,9 +98,6 @@ class SSM(SSPStandard, SSPFile):
                 annotation_element = mapping['annotations'].root
                 if annotation_element is not None:
                     mapping_entry.append(annotation_element)
-
-    def __check_compliance__(self):
-        xmlschema.validate(self.file_path, self.schemas['ssm'])
 
     @property
     def mappings(self):

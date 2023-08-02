@@ -28,7 +28,7 @@ class DictionaryEntryList(list):
         return print_out
 
 
-class SSB(SSPStandard, SSPFile):
+class SSB(SSPFile):
 
     def __init__(self, *args):
         self.version = None
@@ -40,7 +40,7 @@ class SSB(SSPStandard, SSPFile):
         self.__enumerations: Enumerations = Enumerations()
         self.__units: Units = Units()
 
-        super().__init__(*args)
+        super().__init__(*args, identifier='ssb')
 
     def __read__(self):
         self.__tree = ET.parse(self.file_path, parser=ET.XMLParser(encoding='utf-8'))
@@ -60,9 +60,6 @@ class SSB(SSPStandard, SSPFile):
             dictionary_entry = ET.Element(QName(self.namespaces['ssb'], 'DictionaryEntry'), attrib={'name': entry.get('name')})
             dictionary_entry.append(entry["type_entry"].element())
             self.root.append(dictionary_entry)
-
-    def __check_compliance__(self):
-        xmlschema.validate(self.file_path, self.schemas['ssb'], namespaces=self.namespaces)
 
     def add_dictionary_entry(self, name: str, ptype: str, value: dict, annotations=None):
         self.__dictionary_entry.append(DictionaryEntry(name=name,
