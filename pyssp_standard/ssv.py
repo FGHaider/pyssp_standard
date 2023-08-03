@@ -1,14 +1,12 @@
 from lxml import etree as ET
 from typing import TypedDict, List
-
 from lxml.etree import QName
 
 from pyssp_standard.common_content_ssc import BaseElement, TopLevelMetaData
 from pyssp_standard.parameter_types import ParameterType
-import xmlschema
 
 from pyssp_standard.unit import BaseUnit, Unit, Units
-from pyssp_standard.utils import SSPStandard, SSPFile
+from pyssp_standard.utils import SSPFile
 
 
 class Parameter(TypedDict):

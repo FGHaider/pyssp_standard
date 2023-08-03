@@ -1,8 +1,11 @@
 from typing import TypedDict
 from lxml import etree as ET
+from lxml.etree import QName
+
+from pyssp_standard.utils import SSPStandard
 
 
-class Transformation:
+class Transformation(SSPStandard):
 
     def __init__(self, transformation_type=None, attributes=None, transformation: ET.Element = None):
 
@@ -17,7 +20,8 @@ class Transformation:
 
     def element(self):
         if self.transformation_type is not None:
-            return ET.Element(f'ssc:{self.transformation_type}', attrib=self.transformation)
+            converted_transformation = {key: str(value) for key, value in self.transformation.items()}
+            return ET.Element(QName(self.namespaces['ssc'], self.transformation_type), attrib=converted_transformation)
         return None
 
     @staticmethod

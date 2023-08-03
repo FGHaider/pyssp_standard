@@ -18,7 +18,7 @@ class Annotation(SSPStandard):  # TODO needs to read and not just create
         """
         if type(type_declaration) is str:
             self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotation'), attrib={"type": type_declaration})
-        elif type(type_declaration) is ET._Element:  # TODO see in documentation what is the correct method
+        elif type(type_declaration) is ET._Element:
             self.root = type_declaration
 
     def add_element(self, element: ET.Element):

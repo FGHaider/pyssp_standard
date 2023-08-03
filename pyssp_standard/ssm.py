@@ -1,7 +1,6 @@
-import xmlschema
 from pyssp_standard.transformation_types import Transformation
 from pyssp_standard.common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
-from pyssp_standard.utils import SSPStandard, SSPFile
+from pyssp_standard.utils import SSPFile
 from lxml import etree as et
 from lxml.etree import QName
 from typing import TypedDict
@@ -126,7 +125,7 @@ class SSM(SSPFile):
             mapping_found = self.__mappings[idx]
             if target is not None:
                 mapping_found['target'] = target
-            if target is not None:
+            if source is not None:
                 mapping_found['source'] = source
             if transformation is not None:
                 mapping_found['transformation'] = transformation
