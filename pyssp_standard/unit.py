@@ -2,7 +2,8 @@ from dataclasses import dataclass, asdict
 from lxml import etree as ET
 from lxml.etree import QName
 
-from pyssp_standard.utils import SSPElement, SSPStandard
+from pyssp_standard.utils import SSPElement
+from pyssp_standard.standard import SSPStandard
 
 
 @dataclass

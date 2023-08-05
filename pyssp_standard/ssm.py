@@ -34,7 +34,6 @@ class SSM(SSPFile):
         self.__base_element: BaseElement = BaseElement()
         self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__mappings: MappingList[MappingEntry] = MappingList()
-        self.__annotations: Annotations = Annotations()
 
         super().__init__(*args, identifier='ssm')
 

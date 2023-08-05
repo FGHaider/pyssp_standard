@@ -9,7 +9,7 @@ from pyssp_standard.ssb import SSB
 from pyssp_standard.ssv import SSV
 from pyssp_standard.ssm import SSM
 from pyssp_standard.fmu import FMU
-from pyssp_standard.utils import SSPStandard
+from pyssp_standard.standard import SSPStandard
 
 
 class SSP(SSPStandard):

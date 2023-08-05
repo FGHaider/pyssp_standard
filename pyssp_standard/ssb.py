@@ -5,7 +5,7 @@ from pyssp_standard.unit import Units
 from pyssp_standard.utils import SSPFile
 from lxml import etree as ET
 from lxml.etree import QName
-from typing import TypedDict, List
+from typing import TypedDict
 
 
 class DictionaryEntry(TypedDict):
@@ -34,7 +34,6 @@ class SSB(SSPFile):
         self.base_element = None
         self.top_level_meta_data = None
 
-        self.__annotations: Annotations = Annotations()
         self.__dictionary_entry: DictionaryEntryList = DictionaryEntryList()
         self.__enumerations: Enumerations = Enumerations()
         self.__units: Units = Units()
@@ -64,9 +63,6 @@ class SSB(SSPFile):
         self.__dictionary_entry.append(DictionaryEntry(name=name,
                                                        type_entry=ParameterType(ptype, value, 'ssc'),
                                                        annotations=Annotations() if annotations is None else annotations))
-
-    def add_annotation(self, annotation: Annotation):
-        self.__annotations.add_annotation(annotation)
 
     def add_enumeration(self, enum: Enumeration):
         self.__enumerations.add_enumeration(enum)

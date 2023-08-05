@@ -1,32 +1,18 @@
-import os
+
 import tempfile
 from pathlib import Path, PosixPath
 from abc import ABC, abstractmethod
-
 import xmlschema
 from lxml import etree as ET
+
+from pyssp_standard.common_content_ssc import Annotations, Annotation
+from pyssp_standard.standard import SSPStandard
 
 
 def register_namespaces():
     ssp_standards = SSPStandard
     for name, url in ssp_standards.namespaces.items():
         ET.register_namespace(name, url)
-
-
-class SSPStandard:
-    namespaces = {'ssc': 'http://ssp-standard.org/SSP1/SystemStructureCommon',
-                  'ssv': 'http://ssp-standard.org/SSP1/SystemStructureParameterValues',
-                  'ssb': 'http://ssp-standard.org/SSP1/SystemStructureSignalDictionary',
-                  'ssm': 'http://ssp-standard.org/SSP1/SystemStructureParameterMapping',
-                  'ssd': 'http://ssp-standard.org/SSP1/SystemStructureDescription'}
-
-    __resource_path = Path(__file__).parent / 'resources'
-    schemas = {'ssc': __resource_path / 'SystemStructureCommon.xsd',
-               'ssd': __resource_path / 'SystemStructureDescription.xsd',
-               'ssd11': __resource_path / 'SystemStructureDescription11.xsd',
-               'ssm': __resource_path / 'SystemStructureParameterMapping.xsd',
-               'ssv': __resource_path / 'SystemStructureParameterValues.xsd',
-               'ssb': __resource_path / 'SystemStructureSignalDictionary.xsd'}
 
 
 class SSPFile(ABC, SSPStandard):
@@ -59,12 +45,20 @@ class SSPFile(ABC, SSPStandard):
     def identifier(self):
         return self.__identifier
 
+    @property
+    def annotations(self):
+        return self.__annotations
+
+    def add_annotation(self, annotation: Annotation):
+        self.annotations.add_annotation(annotation)
+
     def __init__(self, file_path, mode='r', identifier='unknown'):
         self.__mode = mode
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)
         self.__file_path = file_path
         self.__identifier = identifier
+        self.__annotations = Annotations()
 
         self.__tree = None
         self.root = None
@@ -85,6 +79,7 @@ class SSPFile(ABC, SSPStandard):
         if self.__mode in ['w', 'a']:
             self.__write__()
             self.__save__()
+
 
 class SSPElement(ABC):
 

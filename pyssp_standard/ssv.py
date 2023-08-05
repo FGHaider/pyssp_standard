@@ -2,7 +2,7 @@ from lxml import etree as ET
 from typing import TypedDict, List
 from lxml.etree import QName
 
-from pyssp_standard.common_content_ssc import BaseElement, TopLevelMetaData
+from pyssp_standard.common_content_ssc import BaseElement, TopLevelMetaData, Annotations, Enumerations
 from pyssp_standard.parameter_types import ParameterType
 
 from pyssp_standard.unit import BaseUnit, Unit, Units
@@ -35,7 +35,7 @@ class SSV(SSPFile):
             self.__units = Units(units[0])
 
     def __write__(self):
-        self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'), attrib={'version': '1.0', 'name': 'nan'})
+        self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'), attrib={'version': '1.0', 'name': self.__name})
         self.root = self.__top_level_metadata.update_root(self.root)
         self.root = self.__base_element.update_root(self.root)
 
@@ -47,15 +47,15 @@ class SSV(SSPFile):
         if not self.__units.is_empty():
             self.root.append(self.__units.element('ssv'))
 
-    def __init__(self, *args):
+    def __init__(self, filepath, mode='r', name='unnamed'):
         self.__base_element: BaseElement = BaseElement()
         self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__parameters: List[Parameter] = []
-        self.__enumerations = []
+        self.__enumerations: Enumerations() = Enumerations
         self.__units: Units = Units()
-        self.__annotations = []
+        self.__name = name
 
-        super().__init__(*args, identifier='ssv')
+        super().__init__(file_path=filepath, mode=mode, identifier='ssv')
 
     @property
     def parameters(self):

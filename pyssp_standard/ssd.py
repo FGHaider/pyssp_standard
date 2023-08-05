@@ -1,7 +1,8 @@
 
 from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
 from pyssp_standard.unit import Units
-from pyssp_standard.utils import SSPStandard, SSPFile
+from pyssp_standard.utils import SSPFile
+from pyssp_standard.standard import SSPStandard
 from lxml import etree as ET
 
 
@@ -98,7 +99,6 @@ class System(SSPStandard):
         self.connectors = []
         self.parameter_bindings = []
         self.signal_dictionaries = []
-        self.annotations = []
 
         self.__read__(system_element)
 
@@ -146,7 +146,6 @@ class SSD(SSPFile):
         self.system = None
         self.default_experiment = None
         self.__enumerations: Enumerations = Enumerations()
-        self.__annotations: Annotations = Annotations()
         self.__units: Units = Units()
 
         if mode not in ['r', 'a']:
