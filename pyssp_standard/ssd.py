@@ -176,20 +176,33 @@ class SSD(SSPFile):
     def connections(self):
         return self.system.connections
 
-    def list_connectors(self, *, kind=None, name=None, parent=None, state=None):
-        """
-        Returns a list of connectors, filtered by the following optional options
-        :param kind: the kind of connector, e.g. input, output or parameter
-        :param name: the name of the connector, utilizes 'in' for lookup
-        :param parent: the name of the parent component, utilizes 'in' for lookup
-        :param state: accepted states are 'closed', 'open' or leave as None.
-            When using either of the states only connectors that are either used in
-            the connections or is used in the listed connections.
+    def list_connections(self, *, source=None, target=None, source_parent=None, target_parent=None):
+        connections = self.connections()
+        matching_connections = []
+        for connection in connections:
+
+            if source is not None and source == connection.start_connector:
+                continue
+            if source is not None and target == connection.end_connector:
+                continue
+            if source is not None and source_parent == connection.start_element:
+                continue
+            if source is not None and target_parent == connection.end_element:
+                continue
+
+            matching_connections.append(connection)
+
+        return matching_connections
+
+    def list_connectors(self, *, kind=None, name=None, parent=None):
+        """Returns a list of connectors, filtered by the following optional options
+            :param kind: the kind of connector, e.g. input, output or parameter
+            :param name: the name of the connector, utilizes 'in' for lookup
+            :param parent: the name of the parent component, utilizes 'in' for lookup
         """
 
         matching_connectors = {}
         component_connectors = self.system.element.as_dict()
-        connections = [connection.as_dict() for connection in self.system.connections]
 
         for component in component_connectors:
             if parent is not None and parent not in component['name']:
@@ -200,11 +213,6 @@ class SSD(SSPFile):
                     continue
                 if name is not None and name not in connector['name']:
                     continue
-
-                if state == 'open':
-                    pass
-                elif state == 'closed':
-                    pass
 
                 if component['name'] not in matching_connectors.keys():
                     matching_connectors[component['name']] = []
