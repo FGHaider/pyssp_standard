@@ -58,6 +58,14 @@ class SSV(SSPFile):
         super().__init__(file_path=filepath, mode=mode, identifier='ssv')
 
     @property
+    def BaseElement(self):
+        return self.__base_element
+
+    @property
+    def TopLevelMetaData(self):
+        return self.__top_level_metadata
+
+    @property
     def parameters(self):
         return self.__parameters
 

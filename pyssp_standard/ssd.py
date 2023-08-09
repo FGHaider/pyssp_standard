@@ -8,25 +8,29 @@ from lxml import etree as ET
 
 class Connection(SSPStandard):
 
-    def __init__(self, element):
+    def __init__(self, element=None, *, start_element=None, start_connector=None, end_element=None, end_connector=None):
         self.base_element = None
-        self.start_element = None  # Optional
-        self.start_connector = None
-        self.end_element = None  # Optional
-        self.end_connector = None
+        self.start_element = start_element  # Optional
+        self.start_connector = start_connector
+        self.end_element = end_element  # Optional
+        self.end_connector = end_connector
         self.suppress_unit_conversion: bool = False
 
         self.transformation = None
         self.annotations = None
         # Connection geometry not connected
 
-        self.__read__(element)
+        if element is not None:
+            self.__read__(element)
 
     def __read__(self, element):
         self.start_element = element.get('startElement')
         self.start_connector = element.get('startConnector')
         self.end_element = element.get('endElement')
         self.end_connector = element.get('endConnector')
+
+    def as_element(self) -> ET.Element:
+        pass
 
     def as_dict(self):
         return {'source': self.start_element, 'signal': self.start_connector,
@@ -167,11 +171,16 @@ class SSD(SSPFile):
         self.name = self.root.get('name')
         self.version = self.root.get('version')
 
-    def add_connection(self, connection):
-        pass
+    def add_connection(self, connection: Connection):
+        if type(connection) is not Connection:
+            raise "Only Connection object may be used."
+        self.system.__connections.append(connection)
 
-    def remove_connection(self, name):
-        pass
+    def remove_connection(self, connection: Connection):
+        for idx, item in enumerate(self.connections()):
+            if item == connection:
+                self.system.__connections.pop(idx)
+                break
 
     def connections(self):
         return self.system.connections
@@ -181,15 +190,14 @@ class SSD(SSPFile):
         matching_connections = []
         for connection in connections:
 
-            if source is not None and source == connection.start_connector:
+            if source is not None and source != connection.start_connector:
                 continue
-            if source is not None and target == connection.end_connector:
+            if source is not None and target != connection.end_connector:
                 continue
-            if source is not None and source_parent == connection.start_element:
+            if source is not None and source_parent != connection.start_element:
                 continue
-            if source is not None and target_parent == connection.end_element:
+            if source is not None and target_parent != connection.end_element:
                 continue
-
             matching_connections.append(connection)
 
         return matching_connections
