@@ -1,14 +1,16 @@
-
 from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
 from pyssp_standard.unit import Units
 from pyssp_standard.utils import SSPFile
 from pyssp_standard.standard import SSPStandard
 from lxml import etree as ET
+from lxml.etree import QName
 
 
 class Connection(SSPStandard):
 
     def __init__(self, element=None, *, start_element=None, start_connector=None, end_element=None, end_connector=None):
+        self.__root = None
+
         self.base_element = None
         self.start_element = start_element  # Optional
         self.start_connector = start_connector
@@ -29,8 +31,20 @@ class Connection(SSPStandard):
         self.end_element = element.get('endElement')
         self.end_connector = element.get('endConnector')
 
+    def __eq__(self, other):
+        if self.start_element == other.start_element and self.start_connector == other.start_connector and \
+                self.end_element == other.end_element and self.end_connector == other.end_connector:
+            return True
+        else:
+            return False
+
     def as_element(self) -> ET.Element:
-        pass
+        self.__root = ET.Element(QName(self.namespaces['ssd'], 'Connection'),
+                                 attrib={'startElement': self.start_element,
+                                         'startConnector': self.start_connector,
+                                         'endElement': self.end_element,
+                                         'endConnector': self.end_connector})
+        return self.__root
 
     def as_dict(self):
         return {'source': self.start_element, 'signal': self.start_connector,
@@ -95,7 +109,6 @@ class Element(SSPStandard):
 class System(SSPStandard):
 
     def __init__(self, system_element: ET.Element):
-
         self.name = None
         self.element = None
         self.__connections = []
@@ -152,6 +165,9 @@ class SSD(SSPFile):
         self.__enumerations: Enumerations = Enumerations()
         self.__units: Units = Units()
 
+        self.connections_to_add = []
+        self.connections_to_remove = []
+
         if mode not in ['r', 'a']:
             raise Exception('Only read mode and append mode are supported for SSD files')
 
@@ -174,12 +190,14 @@ class SSD(SSPFile):
     def add_connection(self, connection: Connection):
         if type(connection) is not Connection:
             raise "Only Connection object may be used."
-        self.system.__connections.append(connection)
+        self.system.connections.append(connection)
+        self.connections_to_add.append(connection)
 
     def remove_connection(self, connection: Connection):
         for idx, item in enumerate(self.connections()):
             if item == connection:
-                self.system.__connections.pop(idx)
+                self.system.connections.pop(idx)
+                self.connections_to_remove.append(connection)
                 break
 
     def connections(self):
@@ -229,4 +247,15 @@ class SSD(SSPFile):
         return matching_connectors
 
     def __write__(self):
-        pass
+        self.__tree = ET.parse(self.file_path)
+        self.root = self.__tree.getroot()
+        system = self.root.findall('ssd:System', self.namespaces)
+        if system is not None:
+            connections_set = system[0].findall('ssd:Connections', self.namespaces)[0]
+            for target in self.connections_to_remove:
+                matching_elements = connections_set.findall('ssd:Connection', namespaces=self.namespaces)
+                for element in matching_elements:
+                    if Connection(element) == target:
+                        element.getparent().remove(element)
+            for add_connection in self.connections_to_add:
+                connections_set.append(add_connection.as_element())
