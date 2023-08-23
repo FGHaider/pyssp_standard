@@ -1,7 +1,6 @@
-import xmlschema
 from pyssp_standard.transformation_types import Transformation
 from pyssp_standard.common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
-from pyssp_standard.utils import SSPStandard, SSPFile
+from pyssp_standard.utils import SSPFile
 from lxml import etree as et
 from lxml.etree import QName
 from typing import TypedDict
@@ -28,16 +27,15 @@ class MappingList(list):
         return print_out
 
 
-class SSM(SSPStandard, SSPFile):
+class SSM(SSPFile):
 
     def __init__(self, *args):
         self.__version: str
         self.__base_element: BaseElement = BaseElement()
         self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__mappings: MappingList[MappingEntry] = MappingList()
-        self.__annotations: Annotations = Annotations()
 
-        super().__init__(*args)
+        super().__init__(*args, identifier='ssm')
 
     def __repr__(self):
         return f"""
@@ -99,9 +97,6 @@ class SSM(SSPStandard, SSPFile):
                 if annotation_element is not None:
                     mapping_entry.append(annotation_element)
 
-    def __check_compliance__(self):
-        xmlschema.validate(self.file_path, self.schemas['ssm'])
-
     @property
     def mappings(self):
         return self.__mappings
@@ -129,7 +124,7 @@ class SSM(SSPStandard, SSPFile):
             mapping_found = self.__mappings[idx]
             if target is not None:
                 mapping_found['target'] = target
-            if target is not None:
+            if source is not None:
                 mapping_found['source'] = source
             if transformation is not None:
                 mapping_found['transformation'] = transformation

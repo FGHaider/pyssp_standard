@@ -46,11 +46,10 @@ class FMU:
         """
 
     def __init__(self, file_path):
-        """
-        This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
-         primarily be considered as a debugging tool for looking of model input, outputs and parameters.
-        :param file_path: filepath to the target FMU.
-        :type file_path: str or PosixPath
+        """This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
+             primarily be considered as a debugging tool for looking of model input, outputs and parameters.
+            :param file_path: filepath to the target FMU.
+            :type file_path: str or PosixPath
         """
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)

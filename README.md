@@ -1,8 +1,8 @@
 # pyssp_standard
 [<img src="https://img.shields.io/badge/Status-In Development-orange.svg?logo=LOGO">](<LINK>)
 
-Python pacakge to interact with files specified by the SSP standard [<img src="https://img.shields.io/badge/SSP-Standard-blue.svg?logo=LOGO">](<https://ssp-standard.org/>)
-. The libary allows for 
+Python package to interact with files specified by the SSP standard [<img src="https://img.shields.io/badge/SSP-Standard-blue.svg?logo=LOGO">](<https://ssp-standard.org/>)
+. The library allows for 
 the creation, reading and editing of SSV, SSM and SSB files. In addition, it allows for the reading of SSP, FMU and SSD
 files. The intended use is for pre-processing work and inspection of a given file.
 
