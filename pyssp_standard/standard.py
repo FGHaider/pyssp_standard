@@ -15,3 +15,10 @@ class SSPStandard:
                'ssm': __resource_path / 'SystemStructureParameterMapping.xsd',
                'ssv': __resource_path / 'SystemStructureParameterValues.xsd',
                'ssb': __resource_path / 'SystemStructureSignalDictionary.xsd'}
+
+
+class SRMDStandard:
+    namespaces = {'stc': 'http://apps.pmsf.net/SSPTraceability/SSPTraceabilityCommon',
+                  'ssc': 'http://ssp-standard.org/SSP1/SystemStructureCommon',
+                  'srmd': 'http://apps.pmsf.net/STMD/SimulationResourceMetaData'}
+    schema = Path(__file__).parent / 'resources' / 'SRMD.xsd'
