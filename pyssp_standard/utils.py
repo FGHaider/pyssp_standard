@@ -57,10 +57,6 @@ class XMLFile(ABC):
         with open(self.__file_path, 'wb') as file:
             file.write(xml_string)
 
-    def __enter__(self):
-        register_namespaces()
-        return self
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.__mode in ['w', 'a']:
             self.__write__()
@@ -90,6 +86,10 @@ class SSPFile(XMLFile, SSPStandard):
 
     def add_annotation(self, annotation: Annotation):
         self.annotations.add_annotation(annotation)
+
+    def __enter__(self):
+        register_namespaces()
+        return self
 
     def __init__(self, file_path, mode='r', identifier='unknown'):
 
