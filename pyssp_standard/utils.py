@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import xmlschema
 from lxml import etree as ET
 
-from pyssp_standard.common_content_ssc import Annotations, Annotation
+from pyssp_standard.common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
 from pyssp_standard.standard import SSPStandard
 
 
@@ -25,6 +25,14 @@ class XMLFile(ABC):
     def __write__(self):
         pass
 
+    @property
+    def BaseElement(self):
+        return self.base_element
+
+    @property
+    def TopLevelMetaData(self):
+        return self.top_level_metadata
+
     def __init__(self, file_path, mode='r'):
         self.__mode = mode
         if type(file_path) is not PosixPath:
@@ -32,6 +40,8 @@ class XMLFile(ABC):
         self.__file_path = file_path
         self.__tree = None
         self.root = None
+        self.base_element: BaseElement = BaseElement()
+        self.top_level_metadata: TopLevelMetaData = TopLevelMetaData()
 
         if mode == 'r' or mode == 'a':
             self.__read__()

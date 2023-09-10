@@ -1,4 +1,6 @@
-from pyssp_standard.common_content_ssc import BaseElement, TopLevelMetaData
+import pathlib
+
+import hashlib
 from pyssp_standard.utils import XMLFile
 from pyssp_standard.standard import SRMDStandard
 from lxml import etree as et
@@ -53,29 +55,39 @@ class Classification(SRMDStandard):
 class SRMD(XMLFile, SRMDStandard):
 
     def __init__(self, file_path, mode='r', name='unnamed'):
-        self.__base_element: BaseElement = BaseElement()
-        self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__name = name
         self.__classifications = []
+        self.data = None
+        self.checksum = None
+        self.checksum_type = "SHA3-256"
+        self.version = "1.0.0-beta2"
 
         super().__init__(file_path, mode)
 
     def __check_compliance__(self):
         super().check_compliance(self.schema, self.namespaces)
 
-    @property
-    def BaseElement(self):
-        return self.__base_element
+    def assign_data(self, filepath, create_checksum=True):
+        if type(filepath) is not pathlib.PosixPath:
+            filepath = pathlib.Path(filepath)
+        self.data = str(filepath)
 
-    @property
-    def TopLevelMetaData(self):
-        return self.__top_level_metadata
+        if create_checksum:
+            with open(filepath) as file:
+                data = file.read()
+                self.checksum = hashlib.sha3_256(data.encode()).hexdigest()
 
     def __read__(self):
         self.__tree = et.parse(self.file_path)
         self.root = self.__tree.getroot()
-        self.__top_level_metadata.update(self.root.attrib)
-        self.__base_element.update(self.root.attrib)
+        self.version = self.root.get('version')
+        self.__name = self.root.get('name')
+        self.data = self.root.get('data')
+        self.__checksum = self.root.get('checksum')
+        self.checksum_type = self.root.get('checksumType')
+
+        self.top_level_metadata.update(self.root.attrib)
+        self.base_element.update(self.root.attrib)
 
         classifications = self.root.findall('stc:Classification', self.namespaces)
         for classification in classifications:
@@ -86,10 +98,15 @@ class SRMD(XMLFile, SRMDStandard):
         return self
 
     def __write__(self):
-        self.root = et.Element(QName(self.namespaces['srmd'], 'SimulationResourceMetaData'),
-                               attrib={'version': '1.0.0-beta2', 'name': self.__name})
-        self.root = self.__top_level_metadata.update_root(self.root)
-        self.root = self.__base_element.update_root(self.root)
+        attributes = {'version': self.version, 'name': self.__name}
+        if self.data is not None:
+            attributes['data'] = self.data
+        if self.checksum is not None:
+            attributes['checksum'] = self.checksum
+            attributes['checksumType'] = self.checksum_type
+        self.root = et.Element(QName(self.namespaces['srmd'], 'SimulationResourceMetaData'), attrib=attributes)
+        self.root = self.top_level_metadata.update_root(self.root)
+        self.root = self.base_element.update_root(self.root)
         for classification in self.__classifications:
             self.root.append(classification.as_element())
 

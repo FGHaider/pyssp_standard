@@ -36,8 +36,8 @@ class SSV(SSPFile):
 
     def __write__(self):
         self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'), attrib={'version': '1.0', 'name': self.__name})
-        self.root = self.__top_level_metadata.update_root(self.root)
-        self.root = self.__base_element.update_root(self.root)
+        self.root = self.top_level_metadata.update_root(self.root)
+        self.root = self.base_element.update_root(self.root)
 
         parameters_entry = ET.SubElement(self.root, QName(self.namespaces['ssv'], 'Parameters'))
         for param in self.__parameters:
@@ -48,22 +48,12 @@ class SSV(SSPFile):
             self.root.append(self.__units.element('ssv'))
 
     def __init__(self, filepath, mode='r', name='unnamed'):
-        self.__base_element: BaseElement = BaseElement()
-        self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__parameters: List[Parameter] = []
         self.__enumerations: Enumerations() = Enumerations
         self.__units: Units = Units()
         self.__name = name
 
         super().__init__(file_path=filepath, mode=mode, identifier='ssv')
-
-    @property
-    def BaseElement(self):
-        return self.__base_element
-
-    @property
-    def TopLevelMetaData(self):
-        return self.__top_level_metadata
 
     @property
     def parameters(self):

@@ -31,8 +31,6 @@ class SSB(SSPFile):
 
     def __init__(self, *args):
         self.version = None
-        self.base_element = None
-        self.top_level_meta_data = None
 
         self.__dictionary_entry: DictionaryEntryList = DictionaryEntryList()
         self.__enumerations: Enumerations = Enumerations()
