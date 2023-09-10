@@ -6,11 +6,7 @@ Python package to interact with files specified by the SSP standard [<img src="h
 the creation, reading and editing of SSV, SSM and SSB files. In addition, it allows for the reading of SSP, FMU and SSD
 files. The intended use is for pre-processing work and inspection of a given file.
 
-The package is currently in alpha, this means:
-- There will be bugs
-- The API may change radically, as a result documentation is lacking
-- Only a limited set of features have been implemented
-- License may change
+In addition to the SSP standard the SRMD standard is also supported.
 
 ## Documentation
 Here follows a number of examples of how to use the library.
@@ -59,3 +55,20 @@ ________________________________________________________________________________
         Variability: tunable
           Causality: parameter
  ```
+
+### SRMD
+Below follows an example where an SRMD file is created, coupled to some data and then added to an SSP file.
+```python
+test_file = Path('./test.srmd')
+data_file = Path('./doc/embrace/test.csv')
+def test_create_srmd(write_file):
+    with SRMD(write_file, 'w') as file:
+        classification = Classification(classification_type='test')
+        classification.add_classification_entry(ClassificationEntry('test', 'This is a test'))
+        file.add_classification(classification)
+        file.assign_data(data_file)
+        
+with SSP(test_file) as file:
+    file.add_resource(test_file)
+    file.add_resource(data_file)
+```

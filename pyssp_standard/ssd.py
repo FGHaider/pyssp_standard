@@ -157,8 +157,6 @@ class SSD(SSPFile):
 
         self.name = None
         self.version = None
-        self.base_element = None
-        self.top_level_meta_data = None
 
         self.system = None
         self.default_experiment = None

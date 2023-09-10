@@ -25,7 +25,8 @@ def test_read_correct_file(read_file):  # Asserts that reading a known correct f
 def test_creation(write_file):
 
     with SSV(write_file, 'w') as file:
-        file.add_parameter(name='Cats', ptype='Integer', value={"value": "10"})
-        file.add_parameter(name='Weight', ptype='Real', value={"value": "20.4", "unit": "kg"})
+        file.add_parameter(parname='Cats', ptype='Integer', value=10)
+        file.add_parameter(parname='Weight', ptype='Real', value=20.4, unit="kg")
         file.add_unit("kg", {"kg": 1})
+        file.add_unit("N")
         file.__check_compliance__()

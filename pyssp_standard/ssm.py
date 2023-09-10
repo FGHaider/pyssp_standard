@@ -1,5 +1,5 @@
 from pyssp_standard.transformation_types import Transformation
-from pyssp_standard.common_content_ssc import Annotations, Annotation, BaseElement, TopLevelMetaData
+from pyssp_standard.common_content_ssc import Annotations, Annotation
 from pyssp_standard.utils import SSPFile
 from lxml import etree as et
 from lxml.etree import QName
@@ -31,8 +31,6 @@ class SSM(SSPFile):
 
     def __init__(self, *args):
         self.__version: str
-        self.__base_element: BaseElement = BaseElement()
-        self.__top_level_metadata: TopLevelMetaData = TopLevelMetaData()
         self.__mappings: MappingList[MappingEntry] = MappingList()
 
         super().__init__(*args, identifier='ssm')
@@ -44,19 +42,11 @@ class SSM(SSPFile):
             Mappings: {len(self.mappings)}
         """
 
-    @property
-    def BaseElement(self):
-        return self.__base_element
-
-    @property
-    def TopLevelMetaData(self):
-        return self.__top_level_metadata
-
     def __read__(self):
         self.__tree = et.parse(self.file_path)
         self.root = self.__tree.getroot()
-        self.__top_level_metadata.update(self.root.attrib)
-        self.__base_element.update(self.root.attrib)
+        self.top_level_metadata.update(self.root.attrib)
+        self.base_element.update(self.root.attrib)
 
         mappings = self.root.findall('ssm:MappingEntry', self.namespaces)
         for entry in mappings:
@@ -81,8 +71,8 @@ class SSM(SSPFile):
     def __write__(self):
 
         self.root = et.Element(QName(self.namespaces['ssm'], 'ParameterMapping'), attrib={'version': '1.0'})
-        self.root = self.__top_level_metadata.update_root(self.root)
-        self.root = self.__base_element.update_root(self.root)
+        self.root = self.top_level_metadata.update_root(self.root)
+        self.root = self.base_element.update_root(self.root)
 
         for mapping in self.__mappings:
             mapping_entry = et.SubElement(self.root, QName(self.namespaces['ssm'], 'MappingEntry'),

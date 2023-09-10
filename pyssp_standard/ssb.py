@@ -1,6 +1,6 @@
 
 from pyssp_standard.parameter_types import ParameterType
-from pyssp_standard.common_content_ssc import Annotations, Enumerations, Annotation, Enumeration
+from pyssp_standard.common_content_ssc import Annotations, Enumerations, Enumeration
 from pyssp_standard.unit import Units
 from pyssp_standard.utils import SSPFile
 from lxml import etree as ET
@@ -31,8 +31,6 @@ class SSB(SSPFile):
 
     def __init__(self, *args):
         self.version = None
-        self.base_element = None
-        self.top_level_meta_data = None
 
         self.__dictionary_entry: DictionaryEntryList = DictionaryEntryList()
         self.__enumerations: Enumerations = Enumerations()
@@ -53,7 +51,8 @@ class SSB(SSPFile):
 
     def __write__(self):
         self.root = ET.Element(QName(self.namespaces['ssb'], 'SignalDictionary'), attrib={'version': '1.0'})
-        # Add BaseElement and ATopLevelMetaData
+        self.root = self.top_level_metadata.update_root(self.root)
+        self.root = self.base_element.update_root(self.root)
         for entry in self.__dictionary_entry:
             dictionary_entry = ET.Element(QName(self.namespaces['ssb'], 'DictionaryEntry'), attrib={'name': entry.get('name')})
             dictionary_entry.append(entry["type_entry"].element())

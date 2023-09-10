@@ -57,6 +57,7 @@ class FMU:
         self.temp_dir = tempfile.mkdtemp()
         self.file_path = file_path
         self.model_description_file = None
+        self.guid = None
 
         self.__variables: VariableList[ScalarVariable] = VariableList()
         self.model_name = None
@@ -71,6 +72,7 @@ class FMU:
         tree = et.parse(self.model_description_file)
         root = tree.getroot()
 
+        self.guid = root.get('guid')
         self.model_name = root.get('modelName')
         self.fmi_version = root.get('fmiVersion')
 
