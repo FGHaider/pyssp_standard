@@ -24,7 +24,6 @@ def test_add_resource(read_file):
         file_to_remove = file.resources[0]
         file.add_resource(file_to_add)
         file.remove_resource(file_to_remove)
-        print(file_to_remove)
 
     with SSP(test_file) as file:
         assert file_to_add.name in [entry.name for entry in file.resources]

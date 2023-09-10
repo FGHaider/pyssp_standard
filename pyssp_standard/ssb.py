@@ -51,7 +51,8 @@ class SSB(SSPFile):
 
     def __write__(self):
         self.root = ET.Element(QName(self.namespaces['ssb'], 'SignalDictionary'), attrib={'version': '1.0'})
-        # Add BaseElement and ATopLevelMetaData
+        self.root = self.top_level_metadata.update_root(self.root)
+        self.root = self.base_element.update_root(self.root)
         for entry in self.__dictionary_entry:
             dictionary_entry = ET.Element(QName(self.namespaces['ssb'], 'DictionaryEntry'), attrib={'name': entry.get('name')})
             dictionary_entry.append(entry["type_entry"].element())
