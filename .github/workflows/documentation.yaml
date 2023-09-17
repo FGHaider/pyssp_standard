@@ -13,6 +13,7 @@ jobs:
           pip install sphinx sphinx_rtd_theme
           pip install lxml
           pip install pint
+          pip install xmlschema
       - name: Sphinx build
         run: |
           sphinx-build docs/source _build
