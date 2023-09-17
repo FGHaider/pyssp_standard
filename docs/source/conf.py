@@ -5,7 +5,7 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../../pyssp_standard'))
 sys.setrecursionlimit(1500)
 
 # -- Project information -----------------------------------------------------
