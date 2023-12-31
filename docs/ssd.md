@@ -1,6 +1,5 @@
-# SRMD
+# SSD
 
 ## Features
 
 ## Example
-
