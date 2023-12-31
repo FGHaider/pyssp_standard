@@ -8,6 +8,8 @@ files. The intended use is for pre-processing work and inspection of a given fil
 
 In addition to the SSP standard the SRMD standard is also supported.
 
+[Index](https://fghaider.github.io/pyssp_standard/docs/index)
+
 ## Documentation
 Here follows a number of examples of how to use the library.
 
