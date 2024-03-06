@@ -50,6 +50,9 @@ class Connection(SSPStandard):
         return {'source': self.start_element, 'signal': self.start_connector,
                 'target': self.end_element, 'receiver': self.end_connector}
 
+    def __str__(self) -> str:
+        return f"""source {self.start_element} - {self.start_connector} -> target {self.end_element} - {self.end_connector}""" 
+
 
 class Connector(SSPStandard):
 
@@ -66,7 +69,6 @@ class Connector(SSPStandard):
 
     def as_dict(self):
         return {'name': self.name, 'kind': self.kind}
-
 
 class Component(SSPStandard):
 
@@ -172,7 +174,7 @@ class SSD(SSPFile):
         super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
     def __read__(self):
-        self.__tree = ET.parse(self.file_path)
+        self.__tree = ET.parse(str(self.file_path))
         self.root = self.__tree.getroot()
 
         system = self.root.findall('ssd:System', self.namespaces)[0]
@@ -201,20 +203,22 @@ class SSD(SSPFile):
     def connections(self):
         return self.system.connections
 
-    def list_connections(self, *, source=None, target=None, source_parent=None, target_parent=None):
+    def list_connections(self, *, start_connector=None, end_connector=None, start_element=None, end_element=None):
         connections = self.connections()
         matching_connections = []
-        for connection in connections:
 
-            if source is not None and source != connection.start_connector:
-                continue
-            if source is not None and target != connection.end_connector:
-                continue
-            if source is not None and source_parent != connection.start_element:
-                continue
-            if source is not None and target_parent != connection.end_element:
-                continue
-            matching_connections.append(connection)
+        def check(value, comparision):
+            return True if value is None else value == comparision
+
+        for connection in connections:
+            connection : Connection
+            sc = [start_connector, connection.start_connector]
+            ec = [end_connector, connection.end_connector]
+            se = [start_element, connection.start_element]
+            ee = [end_element, connection.end_element]
+
+            if check(*sc) and check(*ec) and check(*se) and check(*ee):
+                matching_connections.append(connection)
 
         return matching_connections
 

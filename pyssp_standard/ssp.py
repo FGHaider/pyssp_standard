@@ -37,7 +37,7 @@ class SSP(SSPStandard):
 
     def __init__(self, file_path):
         self.__changed = False
-        self.temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkdtemp(prefix="pyssp_")
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)
         self.file_path = file_path
@@ -45,17 +45,27 @@ class SSP(SSPStandard):
         with zipfile.ZipFile(self.file_path, 'r') as zip_ref:
             zip_ref.extractall(self.temp_dir)
 
-        ssp_unpacked_path = Path(self.temp_dir) / self.file_path.stem
-        ssp_resource_path = ssp_unpacked_path / 'resources'
+        self.ssp_unpacked_path = Path(self.temp_dir)
+        self.ssp_resource_path = self.ssp_unpacked_path / 'resources'
 
-        all_resource_files = set(ssp_resource_path.glob('*'))
-        self.__ssd = list(ssp_unpacked_path.glob('*.ssd'))[0]
-        self.__ssv = list(ssp_resource_path.glob('*.ssv'))
-        self.__ssm = list(ssp_resource_path.glob('*.ssm'))
-        self.__ssb = list(ssp_resource_path.glob('*.ssb'))
-        self.__fmu = list(ssp_resource_path.glob('*.fmu'))
+        all_resource_files = set(self.ssp_resource_path.glob('*'))
+        self.__ssd = list(self.ssp_unpacked_path.glob('*.ssd'))[0]
+        self.__ssv = list(self.ssp_resource_path.glob('*.ssv'))
+        self.__ssm = list(self.ssp_resource_path.glob('*.ssm'))
+        self.__ssb = list(self.ssp_resource_path.glob('*.ssb'))
+        self.__fmu = list(self.ssp_resource_path.glob('*.fmu'))
 
         self.__resources = list(all_resource_files)
+
+    def __str__(self) -> str:
+        nl = "\n - "
+        return f"""\
+{' -'*40}
+[SSP]
+Path       {self.file_path}
+Temp_dir:  {self.ssp_unpacked_path}
+Resources:{nl}{ nl.join([str(i) for i in self.__resources])}
+"""
 
     @property
     def ssd(self):

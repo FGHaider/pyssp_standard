@@ -17,15 +17,15 @@ class ScalarVariable:
 class VariableList(list):
 
     def __repr__(self):
-        print_out = """"""
+        print_out = "VariableList:"
         for item in self:
             print_out += f"""
-        ___________________________________________________________________________________________
-               Name: {item.name}
-        Description: {item.description}
-        Variability: {item.variability}
-          Causality: {item.causality}
-            """
+{' -'*40}
+    Name:        {item.name}
+    Description: {item.description}
+    Variability: {item.variability}
+    Causality:   {item.causality}
+"""
         return print_out
 
 
@@ -38,12 +38,14 @@ class FMU:
         shutil.rmtree(self.temp_dir)
 
     def __repr__(self):
-        return f"""
-        Functional Mockup Unit:
-             Model Name: {self.model_name}
-            FMI Version: {self.fmi_version}
-               Filepath: {self.file_path}
-        """
+        return f"""\
+{' -'*40}
+Functional Mockup Unit:
+    Model Name:  {self.model_name}
+    FMI Version: {self.fmi_version}
+    Filepath:    {self.file_path}
+{' -'*40}
+"""
 
     def __init__(self, file_path):
         """This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
@@ -54,7 +56,7 @@ class FMU:
         if type(file_path) is not PosixPath:
             file_path = Path(file_path)
 
-        self.temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkdtemp(prefix="pyssp_")
         self.file_path = file_path
         self.model_description_file = None
         self.guid = None
@@ -69,7 +71,7 @@ class FMU:
             zip_ref.extractall(self.temp_dir)
 
         self.model_description_file = list(Path(self.temp_dir).glob('modelDescription.xml'))[0]
-        tree = et.parse(self.model_description_file)
+        tree = et.parse(str(self.model_description_file))
         root = tree.getroot()
 
         self.guid = root.get('guid')
