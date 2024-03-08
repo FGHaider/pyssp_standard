@@ -3,7 +3,7 @@ from lxml import etree as ET
 from lxml.etree import QName
 
 from pyssp_standard.utils import SSPElement
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
 
 
 @dataclass
@@ -34,7 +34,7 @@ class BaseUnit:
         return {k: str(v) for k, v in asdict(self).items() if v is not None}
 
 
-class Unit(SSPElement, SSPStandard):
+class Unit(SSPElement, ModelicaStandard):
 
     def __init__(self, unit, base_unit: BaseUnit = None):
 
@@ -59,7 +59,7 @@ class Unit(SSPElement, SSPStandard):
         self.__base_unit = BaseUnit(base_unit.attrib)
 
 
-class Units(SSPStandard):
+class Units(ModelicaStandard):
 
     def __init__(self, element: ET.Element = None):
         self.__units = []

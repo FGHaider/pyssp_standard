@@ -6,7 +6,7 @@ from pyssp_standard.common_content_ssc import Enumerations
 from pyssp_standard.parameter_types import ParameterType
 
 from pyssp_standard.unit import BaseUnit, Unit, Units
-from pyssp_standard.utils import SSPFile
+from pyssp_standard.utils import ModelicaXMLFile
 from pyssp_standard.unit_conversion import generate_base_unit
 
 
@@ -16,11 +16,11 @@ class Parameter(TypedDict):
     type_value: ParameterType
 
 
-class SSV(SSPFile):
+class SSV(ModelicaXMLFile):
 
     def __read__(self):
-        self.__tree = ET.parse(self.file_path)
-        self.root = self.__tree.getroot()
+        tree = ET.parse(str(self.file_path))
+        self.root = tree.getroot()
 
         parameters = self.root.findall('ssv:Parameters', self.namespaces)
         parameter_set = parameters[0].findall('ssv:Parameter', self.namespaces)
@@ -52,7 +52,7 @@ class SSV(SSPFile):
 
     def __init__(self, filepath, mode='r', name='unnamed'):
         self.__parameters: List[Parameter] = []
-        self.__enumerations: Enumerations() = Enumerations
+        self.__enumerations: Enumerations = Enumerations()
         self.__units: Units = Units()
         self.__name = name
 

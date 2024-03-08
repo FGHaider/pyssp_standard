@@ -2,10 +2,10 @@ from typing import TypedDict
 from lxml import etree as ET
 from lxml.etree import QName
 
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
 
 
-class ParameterType(SSPStandard):
+class ParameterType(ModelicaStandard):
 
     def __init__(self, parameter_type=None, attributes=None, namespace='ssv'):
         self.namespace = namespace

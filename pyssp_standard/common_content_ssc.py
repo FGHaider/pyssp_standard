@@ -4,10 +4,10 @@ from lxml import etree as ET
 from lxml.etree import QName
 from dataclasses import dataclass, asdict, fields
 
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
 
 
-class Annotation(SSPStandard):  # TODO needs to read and not just create
+class Annotation(ModelicaStandard):  # TODO needs to read and not just create
 
     def __init__(self, type_declaration):
         """
@@ -31,7 +31,7 @@ class Annotation(SSPStandard):  # TODO needs to read and not just create
         self.root.append(ET.Element(name, attrib=attributes))
 
 
-class Annotations(SSPStandard):
+class Annotations(ModelicaStandard):
 
     def __init__(self):
         self.__count = 0
@@ -115,7 +115,7 @@ class Enumeration(TypedDict):
     annotations: Annotations
 
 
-class Enumerations(SSPStandard):
+class Enumerations(ModelicaStandard):
 
     def __init__(self, enumerations: List[Enumeration] = None):
         self.__root = ET.Element(QName(self.namespaces['ssc'], 'Enumerations'))

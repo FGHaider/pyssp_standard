@@ -1,3 +1,4 @@
+import os
 import tempfile
 import zipfile
 import shutil
@@ -8,100 +9,79 @@ from pyssp_standard.ssb import SSB
 from pyssp_standard.ssv import SSV
 from pyssp_standard.ssm import SSM
 from pyssp_standard.fmu import FMU
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
+from pyssp_standard.utils import ZIPFile
 
 
-class SSP(SSPStandard):
+class SSP(ZIPFile):
 
     def __enter__(self):
+        super().__enter__()
+        self.ssp_resource_path = self.unpacked_path / 'resources'
+
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.__changed:
-            temp_resources = Path(self.temp_dir) / self.file_path.stem / 'resources'
-            current_resources = list(temp_resources.glob('*'))
-            for resource in self.__resources:
-                if resource not in current_resources and resource.parent != temp_resources:
-                    shutil.copy(resource, temp_resources)
-            for resource in current_resources:
-                if resource not in self.__resources and resource.parent == temp_resources:
-                    resource.unlink()
-            filepath = self.file_path.parent / self.file_path.stem
-            filepath_zip = Path(str(filepath) + '.zip')
-            filepath_ssp = Path(str(filepath) + '.ssp')
-            shutil.make_archive(filepath, 'zip', self.temp_dir)
-            if filepath_ssp.exists():
-                filepath_ssp.unlink()
-            filepath_zip.rename(filepath_ssp)
-        shutil.rmtree(self.temp_dir)
+    def __init__(self, source_path, target_path=None, readonly=False):
+        super().__init__(source_path, target_path, readonly)
+        self.ssp_resource_path :Path = None
 
-    def __init__(self, file_path):
-        self.__changed = False
-        self.temp_dir = tempfile.mkdtemp(prefix="pyssp_")
-        if type(file_path) is not PosixPath:
-            file_path = Path(file_path)
-        self.file_path = file_path
-
-        with zipfile.ZipFile(self.file_path, 'r') as zip_ref:
-            zip_ref.extractall(self.temp_dir)
-
-        self.ssp_unpacked_path = Path(self.temp_dir)
-        self.ssp_resource_path = self.ssp_unpacked_path / 'resources'
-
-        all_resource_files = set(self.ssp_resource_path.glob('*'))
-        self.__ssd = list(self.ssp_unpacked_path.glob('*.ssd'))[0]
-        self.__ssv = list(self.ssp_resource_path.glob('*.ssv'))
-        self.__ssm = list(self.ssp_resource_path.glob('*.ssm'))
-        self.__ssb = list(self.ssp_resource_path.glob('*.ssb'))
-        self.__fmu = list(self.ssp_resource_path.glob('*.fmu'))
-
-        self.__resources = list(all_resource_files)
-
-    def __str__(self) -> str:
-        nl = "\n - "
-        return f"""\
-{' -'*40}
-[SSP]
-Path       {self.file_path}
-Temp_dir:  {self.ssp_unpacked_path}
-Resources:{nl}{ nl.join([str(i) for i in self.__resources])}
+    def __rep__(self) -> str:
+        spacing = "\t\t"
+        return \
+f"""{'_'*100}
+SSP:
+    Path       {self.file_path}
+    Temp_dir:  {self.unpacked_path}
+    Resources:
+{spacing}{spacing.join([str(r) for r in self.resources])}
+{'_'*100}
 """
 
     @property
     def ssd(self):
-        return SSD(self.__ssd)
+        ssd = list(self.unpacked_path.glob('*.ssd'))[0]
+        return SSD(ssd)
 
     @property
     def ssv(self):
-        return [SSV(ssv) for ssv in self.__ssv]
+        ssv = list(self.ssp_resource_path.glob('*.ssv'))
+        return [SSV(ssv) for ssv in ssv]
 
     @property
     def ssm(self):
-        return [SSM(file) for file in self.__ssm]
+        ssm = list(self.ssp_resource_path.glob('*.ssm'))
+        return [SSM(file) for file in ssm]
 
     @property
     def ssb(self):
-        return [SSB(file) for file in self.__ssb]
+        ssb = list(self.ssp_resource_path.glob('*.ssb'))
+        return [SSB(file) for file in ssb]
 
     @property
     def fmu(self):
-        return [FMU(file) for file in self.__fmu]
+        fmu = list(self.ssp_resource_path.glob('*.fmu'))
+        return [FMU(file) for file in fmu]
 
     @property
     def resources(self):
-        """ Returns a list of available resources in the ssp folder /resources"""
-        return self.__resources
+        """ 
+        Returns a list of available resources in the ssp folder /resources
+        """
+        return [f for f in self.get_files(self.ssp_resource_path).keys()]
 
-    def add_resource(self, resource):
+    def add_resource(self, file :Path):
         """
         Add something to the resource folder of the ssp.
         :param resource: filepath of the object to add.
         """
-        self.__changed = True
-        self.__resources.append(resource)
+        self.add_file(file, "resources")
 
     def remove_resource(self, resource_name):
-        self.__changed = True
+        """
+        Remove resource
+        """
         if type(resource_name) is not str:
             resource_name = resource_name.name
-        self.__resources = [path for path in self.__resources if path.name != resource_name]
+
+        self.remove_file(f"resources/{resource_name}")
+        
