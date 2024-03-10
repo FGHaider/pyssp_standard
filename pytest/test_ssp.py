@@ -16,17 +16,21 @@ def test_unpacking(read_file):
 
 
 def test_add_resource(read_file):
-    test_file = Path('./embrace.ssp')
-    shutil.copy(read_file, test_file)
+    print()
+    test_ssp_file = Path('./embrace.ssp')
+    shutil.copy(read_file, test_ssp_file)
 
     file_to_add = Path('./doc/test.txt')
-    with SSP(test_file) as file:
-        file_to_remove = file.resources[0]
-        file.add_resource(file_to_add)
-        file.remove_resource(file_to_remove)
+    with SSP(test_ssp_file) as ssp:
+        file_to_remove = ssp.resources[0]
+        print(file_to_remove)
+        ssp.add_resource(file_to_add)
+        ssp.remove_resource(file_to_remove)
 
-    with SSP(test_file) as file:
-        assert file_to_add.name in [entry.name for entry in file.resources]
-        assert file_to_remove.name not in [entry.name for entry in file.resources]
+        print(ssp.resources)
 
-    test_file.unlink()
+    with SSP(test_ssp_file) as ssp:
+        assert file_to_add.name in [entry for entry in ssp.resources]
+        assert file_to_remove not in [entry for entry in ssp.resources]
+
+    test_ssp_file.unlink()

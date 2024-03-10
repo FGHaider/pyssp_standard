@@ -5,6 +5,9 @@ from pathlib import Path, PosixPath
 from dataclasses import dataclass
 from lxml import etree as et
 
+from pyssp_standard.standard import ModelicaStandard
+from pyssp_standard.utils import ModelicaXMLFile, ZIPFile
+
 
 @dataclass
 class ScalarVariable:
@@ -17,59 +20,49 @@ class ScalarVariable:
 class VariableList(list):
 
     def __repr__(self):
-        print_out = """"""
+        print_out = \
+f"""{'_'*100}
+VariableList:
+"""
         for item in self:
-            print_out += f"""
-        ___________________________________________________________________________________________
-               Name: {item.name}
-        Description: {item.description}
-        Variability: {item.variability}
-          Causality: {item.causality}
-            """
+            print_out += \
+f"""{'_'*20}
+    Name:        {item.name}
+    Description: {item.description}
+    Variability: {item.variability}
+    Causality:   {item.causality}
+"""
+        print_out += f"{'_' *100}\n"
         return print_out
 
 
-class FMU:
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        shutil.rmtree(self.temp_dir)
+class ModelDescription(ModelicaXMLFile):
+    """
+    
+    """
 
     def __repr__(self):
-        return f"""
-        Functional Mockup Unit:
-             Model Name: {self.model_name}
-            FMI Version: {self.fmi_version}
-               Filepath: {self.file_path}
-        """
+        return \
+f"""{'_'*100}
+ModelDescription:
+    Model Name:  {self.model_name}
+    FMI Version: {self.fmi_version}
+    Filepath:    {self.file_path}
+{'_'*100}
+"""
 
-    def __init__(self, file_path):
-        """This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
-             primarily be considered as a debugging tool for looking of model input, outputs and parameters.
-            :param file_path: filepath to the target FMU.
-            :type file_path: str or PosixPath
-        """
-        if type(file_path) is not PosixPath:
-            file_path = Path(file_path)
+    def __init__(self, file_path, mode='r'):
 
-        self.temp_dir = tempfile.mkdtemp()
-        self.file_path = file_path
-        self.model_description_file = None
         self.guid = None
 
         self.__variables: VariableList[ScalarVariable] = VariableList()
         self.model_name = None
         self.fmi_version = None
-        self.__read__()
+
+        super().__init__(file_path, mode, "fmi30")
 
     def __read__(self):
-        with zipfile.ZipFile(self.file_path, 'r') as zip_ref:
-            zip_ref.extractall(self.temp_dir)
-
-        self.model_description_file = list(Path(self.temp_dir).glob('modelDescription.xml'))[0]
-        tree = et.parse(self.model_description_file)
+        tree = et.parse(str(self.file_path))
         root = tree.getroot()
 
         self.guid = root.get('guid')
@@ -86,6 +79,9 @@ class FMU:
             scalar_variable = ScalarVariable(name=name, description=description,
                                              variability=variability, causality=causality)
             self.__variables.append(scalar_variable)
+
+    def __write__(self):
+        pass
 
     @property
     def parameters(self) -> VariableList:
@@ -119,3 +115,50 @@ class FMU:
 
     def variables(self) -> VariableList:
         return self.__variables
+
+
+class FMU(ZIPFile):
+    """This class allows for peeking into a FMU file, it by no means covers the entirety of the FMI standard and should
+            primarily be considered as a debugging tool for looking of model input, outputs and parameters.
+    """
+
+    def __enter__(self):
+        super().__enter__()
+        self.fmu_binaries_path = self.unpacked_path / 'binaries'
+        self.fmu_documentation_path = self.unpacked_path / 'documentation'
+
+        return self
+
+    def __init__(self, source_path, target_path=None, readonly=False):
+        super().__init__(source_path, target_path, readonly)
+        self.fmu_binaries_path :Path = None
+        self.fmu_documentation_path :Path = None
+
+    def __str__(self) -> str:
+        nl = "\t\n - "
+        return f"""
+{'_'*100}
+FMU:
+    Path       {self.file_path}
+    Temp_dir:  {self.unpacked_path}
+    Resources:{nl}{ nl.join([str(i) for i in self.files_rel])}
+"""
+
+    @property
+    def model_description(self):
+        md = list(self.unpacked_path.glob('modelDescription'))[0]
+        return ModelDescription(md)
+    
+    @property
+    def binaries(self):
+        """ 
+        Returns a list of available binaries in the fmu folder /binaries
+        """
+        return [f for f in self.get_files(self.fmu_binaries_path).keys()]
+
+    @property
+    def documentation(self):
+        """ 
+        Returns a list of available documentation in the fmu folder /documentation
+        """
+        return [f for f in self.get_files(self.fmu_documentation_path).keys()]

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<srmd:SimulationResourceMetaData version="1.0.0-beta2" name="Stimuli Meta-Data" generationTool="orchideo | easySSP (eXXcellent solutions GmbH)" generationDateAndTime="2024-02-06T13:21:41Z" xmlns:srmd="http://ssp-standard.org/SSPTraceability1/SimulationResourceMetaData" xmlns:ssc="http://ssp-standard.org/SSP1/SystemStructureCommon" xmlns:stc="http://ssp-standard.org/SSPTraceability1/SSPTraceabilityCommon" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <stc:Classification type="de.setlevel.srmd.ISO-11010-X">
+        <stc:ClassificationEntry keyword="part">The part of the ISO-11010 relevant for model, for example 1 if ISO-11010-1</stc:ClassificationEntry>
+        <stc:ClassificationEntry keyword="plant">The relevant nomencalture convention for the plant part of the model if applicable, for example a Model of the Brake physical system: BRM2.2</stc:ClassificationEntry>
+        <stc:ClassificationEntry keyword="controller">The relevant nomencalture convention for the controller part of the model if applicable, for example a Model of the Brake controller system: BRC2.1</stc:ClassificationEntry>
+    </stc:Classification>
+</srmd:SimulationResourceMetaData>

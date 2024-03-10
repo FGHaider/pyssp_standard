@@ -1,6 +1,6 @@
 from pyssp_standard.transformation_types import Transformation
 from pyssp_standard.common_content_ssc import Annotations, Annotation
-from pyssp_standard.utils import SSPFile
+from pyssp_standard.utils import ModelicaXMLFile
 from lxml import etree as et
 from lxml.etree import QName
 from typing import TypedDict
@@ -17,17 +17,21 @@ class MappingEntry(TypedDict):
 class MappingList(list):
 
     def __repr__(self):
-        print_out = """"""
+        print_out = \
+f"""{'_'*100}
+MappingList:
+"""
         for item in self:
-            print_out += f"""
-        ___________________________________________________________________________________________
-        Source: {item['source']}
-        Target: {item['target']}
-            """
+            print_out += \
+f"""{'_'*20}
+    Source: {item['source']}
+    Target: {item['target']}
+"""
+        print_out += f"{'_' *100}\n"
         return print_out
 
 
-class SSM(SSPFile):
+class SSM(ModelicaXMLFile):
 
     def __init__(self, *args):
         self.__version: str
@@ -36,15 +40,17 @@ class SSM(SSPFile):
         super().__init__(*args, identifier='ssm')
 
     def __repr__(self):
-        return f"""
-        Parameter Mapping:
-            Filepath: {self.file_path}
-            Mappings: {len(self.mappings)}
-        """
+        return \
+f"""{'_'*100}
+Parameter Mapping:
+    Filepath: {self.file_path}
+    Mappings: {len(self.mappings)}
+{'_'*100}
+"""
 
     def __read__(self):
-        self.__tree = et.parse(self.file_path)
-        self.root = self.__tree.getroot()
+        tree = et.parse(self.file_path)
+        self.root = tree.getroot()
         self.top_level_metadata.update(self.root.attrib)
         self.base_element.update(self.root.attrib)
 
