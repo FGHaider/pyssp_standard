@@ -18,6 +18,9 @@ def test_unpacking_packing(fmu_file):
     shutil.copy(fmu_file, test_fmu_file)
 
     with FMU(test_fmu_file) as fmu:
+
+        md = fmu.model_description
+        
         assert len(fmu.binaries) > 0
         assert len(fmu.documentation) > 0
 

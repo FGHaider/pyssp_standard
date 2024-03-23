@@ -146,7 +146,7 @@ FMU:
 
     @property
     def model_description(self):
-        md = list(self.unpacked_path.glob('modelDescription'))[0]
+        md = list(self.unpacked_path.glob('modelDescription.xml'))[0]
         return ModelDescription(md)
     
     @property

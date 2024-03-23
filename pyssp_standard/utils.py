@@ -73,8 +73,8 @@ class XMLFile(ABC):
             schema = xmlschema.XMLSchema10(schema)
 
         if self.__mode in ['a', 'w']:  # Temporary file creation
-            with tempfile.TemporaryDirectory(suffix="pyssp_") as temp_dir:
-                temp_file_path = temp_dir + 'tmp.xml'
+            with tempfile.TemporaryDirectory(suffix="_pyssp") as temp_dir:
+                temp_file_path = Path(temp_dir) / 'tmp.xml'
                 self.__write__()
                 self.write_to_file(temp_file_path)
 
