@@ -113,20 +113,24 @@ class System(ModelicaStandard):
     def __init__(self, system_element: ET.Element):
         self.name = None
         self.element = None
-        self.__connections = []
+        self.__connections : list[Connection] = []
 
-        self.connectors = []
+        self.connectors : list[Connector] = []
         self.parameter_bindings = []
         self.signal_dictionaries = []
 
         self.__read__(system_element)
 
     def __read__(self, element):
+        self.name = element.get('name', None)
         elements = element.findall('ssd:Elements', namespaces=self.namespaces)
-        self.element = Element(elements[0])
+        if len(elements) > 0:
+            self.element = Element(elements[0])
+
         connections = element.findall('ssd:Connections', namespaces=self.namespaces)
-        for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
-            self.__connections.append(Connection(connection))
+        if len(connections) > 0:
+            for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
+                self.__connections.append(Connection(connection))
 
     @property
     def connections(self):
