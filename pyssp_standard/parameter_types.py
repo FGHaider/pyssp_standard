@@ -16,6 +16,8 @@ class ParameterType(ModelicaStandard):
         elif type(parameter_type) is str:
             self.parameter_type = parameter_type
             self.parameter = self.__create_parameter__(parameter_type, attributes)
+        else:
+            raise Exception(f"No parameter type is provided attribs: {attributes}")
 
     def element(self):
         if self.namespace == 'ssc':

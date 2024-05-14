@@ -77,8 +77,8 @@ class SSV(ModelicaXMLFile):
             parameter_dict['mimetype'] = mimetype
         if unit is not None:
             parameter_dict['unit'] = unit
-        self.__parameters.append(Parameter(name=parname, type_name=ptype,
-                                           type_value=ParameterType(ptype, parameter_dict)))
+        p = Parameter(name=parname, type_name=ptype, type_value=ParameterType(ptype, parameter_dict))
+        self.__parameters.append(p)
 
     def add_unit(self, name: str, base_unit: dict = None):
         """
