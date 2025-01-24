@@ -19,7 +19,7 @@ class Parameter(TypedDict):
 class SSV(ModelicaXMLFile):
 
     def __read__(self):
-        tree = ET.parse(str(self.file_path))
+        tree = ET.parse(self.file_path.as_posix())
         self.root = tree.getroot()
 
         parameters = self.root.findall('ssv:Parameters', self.namespaces)

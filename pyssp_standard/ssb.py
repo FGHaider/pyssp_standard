@@ -43,7 +43,7 @@ class SSB(ModelicaXMLFile):
         super().__init__(*args, identifier='ssb')
 
     def __read__(self):
-        tree = ET.parse(self.file_path, parser=ET.XMLParser(encoding='utf-8'))
+        tree = ET.parse(self.file_path.as_posix(), parser=ET.XMLParser(encoding='utf-8'))
         self.root = tree.getroot()
 
         self.version = self.root.get('version')

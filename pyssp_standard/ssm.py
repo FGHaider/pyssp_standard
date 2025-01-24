@@ -49,7 +49,7 @@ Parameter Mapping:
 """
 
     def __read__(self):
-        tree = et.parse(self.file_path)
+        tree = et.parse(self.file_path.as_posix())
         self.root = tree.getroot()
         self.top_level_metadata.update(self.root.attrib)
         self.base_element.update(self.root.attrib)

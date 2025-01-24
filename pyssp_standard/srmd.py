@@ -70,7 +70,8 @@ class SRMD(ModelicaXMLFile):
                 self.checksum = hashlib.sha3_256(data.encode()).hexdigest()
 
     def __read__(self):
-        tree = et.parse(self.file_path)
+        tree = et.parse(self.file_path.as_posix())
+        # tree = et.parse(self.file_path)
         self.root = tree.getroot()
         self.version = self.root.get('version')
         self.name = self.root.get('name')
@@ -83,7 +84,17 @@ class SRMD(ModelicaXMLFile):
 
         classifications = self.root.findall('stc:Classification', self.namespaces)
         for classification in classifications:
-            self.add_classification(Classification(element=classification))
+            # self.add_classification(Classification(element=classification))
+            classification_entries = classification.getchildren()
+            type = classification.attrib['type']
+            classification_new = Classification(classification_type=type)
+            for classification_entry in classification_entries:
+                keyword = classification_entry.attrib['keyword']
+                value = classification_entry.text
+                classification_new.add_classification_entry(ClassificationEntry(keyword, value))
+                # self.classifications[-1].add_classification_entry(ClassificationEntry(keyword, value))
+                # self.classifications[-1].add_classification_entry(classification_entry)
+            self.add_classification(classification_new)
 
     def __write__(self):
         attributes = {'version': self.version, 'name': self.name}

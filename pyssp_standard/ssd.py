@@ -178,7 +178,7 @@ class SSD(ModelicaXMLFile):
         super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
     def __read__(self):
-        tree = ET.parse(str(self.file_path))
+        tree = ET.parse(self.file_path.as_posix())
         self.root = tree.getroot()
 
         system = self.root.findall('ssd:System', self.namespaces)[0]
