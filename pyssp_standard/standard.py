@@ -14,6 +14,8 @@ class ModelicaStandard:
         "srmd": "http://ssp-standard.org/SSPTraceability1/SimulationResourceMetaData",
         # FMI
         "fmi30": "",
+        # XLink
+        "xlink": "http://www.w3.org/1999/xlink"
     }
 
     __resource_path = Path(__file__).parent / "resources"
