@@ -1,4 +1,4 @@
-from pyssp_standard.srmd import SRMD, Classification, ClassificationEntry, classification_parser
+from pyssp_standard import SRMD, Classification, ClassificationEntry, classification_parser
 import pytest
 from pathlib import Path
 import hashlib

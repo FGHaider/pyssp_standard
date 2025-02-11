@@ -250,7 +250,7 @@ class SRMD(ModelicaXMLFile):
                 self.checksum = hashlib.sha3_256(data.encode()).hexdigest()
 
     def __read__(self):
-        tree = et.parse(self.file_path.as_posix())
+        tree = et.parse(str(self.file_path))
         # tree = et.parse(self.file_path)
         self.root = tree.getroot()
         self.version = self.root.get('version')
