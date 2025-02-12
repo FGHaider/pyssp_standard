@@ -251,7 +251,6 @@ class SRMD(ModelicaXMLFile):
 
     def __read__(self):
         tree = et.parse(str(self.file_path))
-        # tree = et.parse(self.file_path)
         self.root = tree.getroot()
         self.version = self.root.get('version')
         self.name = self.root.get('name')
