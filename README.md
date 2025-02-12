@@ -74,3 +74,38 @@ with SSP(test_file) as file:
     file.add_resource(test_file)
     file.add_resource(data_file)
 ```
+
+In some cases it may be useful to perform additional parsing on Classifications. For example, to expose
+a known set of keywords as attributes, or to perform additional parsing on entry values (such as parsing
+dates). If an entry has an XML structure describing a more advanced value, this could also be parsed.
+To enable these use cases there is a decorator associate a parser with a given Classification type. If
+a classification of that type is encountered in an SRMD file, it will automatically be parsed with the
+custom parser. An example implementation of a custom parser is shown below:
+```python
+@classification_parser("com.example.custom")
+class CustomClassification(Classification):
+    test1: str
+    test2: str
+
+    def __init__(self, element=None, test1="", test2="", **kwargs):
+        if element is not None:
+            super().__init__(element)
+
+            for entry in self.classification_entries:
+                if entry.keyword == "test1":
+                    self.test1 = entry.text
+                elif entry.keyword == "test2":
+                    self.test2 = entry.text
+        else:
+            super().__init__("com.example.custom", **kwargs)
+            self.test1 = test1
+            self.test2 = test2
+
+    def as_element(self):
+        self.classification_entries = [
+                ClassificationEntry("test1", text=self.test1),
+                ClassificationEntry("test2", text=self.test2)
+        ]
+
+        return super().as_element()
+```
