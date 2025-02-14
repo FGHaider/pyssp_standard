@@ -182,7 +182,12 @@ def classification_parser(type_: str):
     its only argument. The class is expected to have a method as_element(self)
     that returns the XML element representation of the parsed classification.
 
-    One possible implementation would be something like the following:
+    For example: to parse the following classification schema
+    <stc:Classification type="com.example.custom">
+        <stc:ClassicationEntry keyword="test1">Value 1</stc:ClassificationEntry>
+        <stc:ClassicationEntry keyword="test2">Value 2</stc:ClassificationEntry>
+    </stc:Classification>
+    one might do something like the following code snippet.
 
     >>> @classification_parser("com.example.custom")
     >>> class CustomClassification(Classification):

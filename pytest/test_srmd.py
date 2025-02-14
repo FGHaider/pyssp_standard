@@ -2,6 +2,8 @@ from pyssp_standard import SRMD, Classification, ClassificationEntry, classifica
 import pytest
 from pathlib import Path
 import hashlib
+from dataclasses import dataclass
+import io
 
 from lxml import etree as et
 
@@ -206,6 +208,156 @@ def test_read_write_srmd_custom_parser(write_file):
 
         assert classification.test1 == "testing1"
         assert classification.test2 == "testing2"
+
+
+@dataclass
+class Parent:
+    name: str
+    occupation: str
+
+    def to_xml(self):
+        element = et.Element("Parent")
+        element.set("name", self.name)
+        element.set("occupation", self.occupation)
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        return cls(element.get("name"), element.get("occupation"))
+
+
+@dataclass
+class Child:
+    name: str
+    age: int
+
+    def to_xml(self):
+        element = et.Element("Child")
+        element.set("name", self.name)
+        element.set("age", str(self.age))
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        return cls(element.get("name"), int(element.get("age")))
+
+
+@dataclass
+class Family:
+    parents: list[Parent]
+    children: list[Child]
+
+    def to_xml(self):
+        element = et.Element("Family")
+        element.extend([parent.to_xml() for parent in self.parents])
+        element.extend([child.to_xml() for child in self.children])
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        parents = [Parent.from_xml(el) for el in element.findall("Parent")]
+        children = [Child.from_xml(el) for el in element.findall("Child")]
+
+        return Family(parents, children)
+
+
+@classification_parser("com.example.custom2")
+class CustomClassification2(Classification):
+    example: Family
+
+    def __init__(self, element=None, example="", **kwargs):
+        if element is not None:
+            super().__init__(element)
+
+            for entry in self.classification_entries:
+                if entry.keyword == "example":
+                    self.example = Family.from_xml(entry.content[0])
+        else:
+            super().__init__("com.example.custom2", **kwargs)
+            self.example = example
+
+    def as_element(self):
+        self.classification_entries = [
+                ClassificationEntry("example", content=[self.example.to_xml()])
+        ]
+
+        return super().as_element()
+
+
+def test_read_srmd_custom_parser_xml(write_file):
+    srmd_source = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<srmd:SimulationResourceMetaData version="1.0.0" name="Example"
+        xmlns:srmd="http://ssp-standard.org/SSPTraceability1/SimulationResourceMetaData"
+        xmlns:stc="http://ssp-standard.org/SSPTraceability1/SSPTraceabilityCommon">
+    <stc:Classification type="com.example.custom2">
+        <stc:ClassificationEntry keyword="example">
+            <Family>
+                <Parent name="Alice" occupation="engineer" />
+                <Parent name="Bob" occupation="programmer" />
+                <Child name="Eve" age="15" />
+            </Family>
+        </stc:ClassificationEntry>
+    </stc:Classification>
+</srmd:SimulationResourceMetaData>
+    """
+    with open(write_file, "w") as f:
+        f.write(srmd_source)
+
+    with SRMD(write_file) as file:
+        assert len(file.classifications) == 1
+        classification = file.classifications[0]
+        assert classification.classification_type == "com.example.custom2"
+        assert isinstance(classification, CustomClassification2)
+
+        assert isinstance(classification.example, Family)
+        family = classification.example
+
+        assert len(family.parents) == 2
+        assert len(family.children) == 1
+
+        assert family.parents[0].name == "Alice"
+        assert family.parents[0].occupation == "engineer"
+
+        assert family.parents[1].name == "Bob"
+        assert family.parents[1].occupation == "programmer"
+
+        assert family.children[0].name == "Eve"
+        assert family.children[0].age == 15
+
+
+def test_read_write_srmd_custom_parser_xml(write_file):
+    with SRMD(write_file, 'w') as file:
+        classification = CustomClassification2(
+            example=Family(
+                [Parent("Alice", "engineer"), Parent("Bob", "programmer")],
+                [Child("Eve", 15)]
+            )
+        )
+        file.add_classification(classification)
+
+    with SRMD(write_file) as file:
+        assert len(file.classifications) == 1
+        classification = file.classifications[0]
+        assert classification.classification_type == "com.example.custom2"
+        assert isinstance(classification, CustomClassification2)
+
+        assert isinstance(classification.example, Family)
+        family = classification.example
+
+        assert len(family.parents) == 2
+        assert len(family.children) == 1
+
+        assert family.parents[0].name == "Alice"
+        assert family.parents[0].occupation == "engineer"
+
+        assert family.parents[1].name == "Bob"
+        assert family.parents[1].occupation == "programmer"
+
+        assert family.children[0].name == "Eve"
+        assert family.children[0].age == 15
 
 
 def test_data_assign(write_file):
