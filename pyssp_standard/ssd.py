@@ -192,7 +192,7 @@ class SSD(ModelicaXMLFile):
         self.version = self.root.get('version')
 
     def __write__(self):
-        tree = ET.parse(self.file_path)
+        tree = ET.parse(str(self.file_path))
         self.root = tree.getroot()
         system = self.root.findall('ssd:System', self.namespaces)
         if system is not None:

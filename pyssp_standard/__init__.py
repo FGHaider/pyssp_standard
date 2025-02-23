@@ -7,4 +7,4 @@ from pyssp_standard.ssp import SSP
 from pyssp_standard.transformation_types import Transformation
 from pyssp_standard.common_content_ssc import Annotations, Annotation
 
-from pyssp_standard.srmd import SRMD, Classification, ClassificationEntry
+from pyssp_standard.srmd import SRMD, Classification, ClassificationEntry, classification_parser

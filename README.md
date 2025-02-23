@@ -74,3 +74,142 @@ with SSP(test_file) as file:
     file.add_resource(test_file)
     file.add_resource(data_file)
 ```
+
+In some cases it may be useful to perform additional parsing on Classifications. For example, to expose
+a known set of keywords as attributes, or to perform additional parsing on entry values (such as parsing
+dates). If an entry has an XML structure describing a more advanced value, this could also be parsed.
+To enable these use cases there is a decorator associate a parser with a given Classification type. If
+a classification of that type is encountered in an SRMD file, it will automatically be parsed with the
+custom parser.
+
+**Simple Example:**
+A simple example of a custom classification is shown below.
+```xml
+<stc:Classification type="com.example.custom">
+    <stc:ClassicationEntry keyword="test1">Value 1</stc:ClassificationEntry>
+    <stc:ClassicationEntry keyword="test2">Value 2</stc:ClassificationEntry>
+</stc:Classification>
+```
+To create a custom parser for the simple schema, we subclass Classification in the following way:
+```python
+@classification_parser("com.example.custom")
+class CustomClassification(Classification):
+    test1: str
+    test2: str
+
+    def __init__(self, element=None, test1="", test2="", **kwargs):
+        if element is not None:
+            super().__init__(element)
+
+            for entry in self.classification_entries:
+                if entry.keyword == "test1":
+                    self.test1 = entry.text
+                elif entry.keyword == "test2":
+                    self.test2 = entry.text
+        else:
+            super().__init__("com.example.custom", **kwargs)
+            self.test1 = test1
+            self.test2 = test2
+
+    def as_element(self):
+        self.classification_entries = [
+                ClassificationEntry("test1", text=self.test1),
+                ClassificationEntry("test2", text=self.test2)
+        ]
+
+        return super().as_element()
+```
+
+**Advanced Example:**
+The same functionality can also be used to parse classification schemas with XML structures as values.
+
+```xml
+<stc:Classification type="com.example.custom2">
+    <stc:ClassificationEntry keyword="example">
+        <Family>
+            <Parent name="Alice" occupation="engineer"/>
+            <Parent name="Bob" occupation="programmer"/>
+            <Child name="Eve" age="15"/>
+        </Family>
+    </stc:ClassificationEntry>
+</stc:Classification>
+```
+
+The following is sample code to parse the above schema.
+```python
+@dataclass
+class Parent:
+    name: str
+    occupation: str
+
+    def to_xml(self):
+        element = et.Element("Parent")
+        element.set("name", self.name)
+        element.set("occupation", self.occupation)
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        return cls(element.get("name"), element.get("occupation"))
+
+
+@dataclass
+class Child:
+    name: str
+    age: int
+
+    def to_xml(self):
+        element = et.Element("Child")
+        element.set("name", self.name)
+        element.set("age", str(self.age))
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        return cls(element.get("name"), int(element.get("age")))
+
+
+@dataclass
+class Family:
+    parents: list[Parent]
+    children: list[Child]
+
+    def to_xml(self):
+        element = et.Element("Family")
+        element.extend([parent.to_xml() for parent in self.parents])
+        element.extend([child.to_xml() for child in self.children])
+
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        parents = [Parent.from_xml(el) for el in element.findall("Parent")]
+        children = [Child.from_xml(el) for el in element.findall("Child")]
+
+        return Family(parents, children)
+
+
+@classification_parser("com.example.custom2")
+class CustomClassification2(Classification):
+    example: Family
+
+    def __init__(self, element=None, example="", **kwargs):
+        if element is not None:
+            super().__init__(element)
+
+            for entry in self.classification_entries:
+                if entry.keyword == "example":
+                    self.example = Family.from_xml(entry.content[0])
+        else:
+            super().__init__("com.example.custom2", **kwargs)
+            self.example = example
+
+    def as_element(self):
+        self.classification_entries = [
+                ClassificationEntry("example", content=[self.example.to_xml()])
+        ]
+
+        return super().as_element()
+```
