@@ -59,7 +59,7 @@ class ClassificationEntry(BaseElement, ModelicaStandard):
                 self.content = content
             self.text = text
         else:
-            raise TypeError(f"Can't init ClassificationEntry with {type(type_or_element)}")
+            raise TypeError(f"Can't init ClassificationEntry with {type(keyword_or_element)}")
 
     def __read__(self, element):
         self.update({"id": element.get("id"), "description": element.get("description")})
