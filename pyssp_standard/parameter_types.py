@@ -2,10 +2,10 @@ from typing import TypedDict
 from lxml import etree as ET
 from lxml.etree import QName
 
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
 
 
-class ParameterType(SSPStandard):
+class ParameterType(ModelicaStandard):
 
     def __init__(self, parameter_type=None, attributes=None, namespace='ssv'):
         self.namespace = namespace
@@ -16,6 +16,8 @@ class ParameterType(SSPStandard):
         elif type(parameter_type) is str:
             self.parameter_type = parameter_type
             self.parameter = self.__create_parameter__(parameter_type, attributes)
+        else:
+            raise Exception(f"No parameter type is provided attribs: {attributes}")
 
     def element(self):
         if self.namespace == 'ssc':

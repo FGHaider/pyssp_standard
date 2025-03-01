@@ -2,10 +2,10 @@ from typing import TypedDict
 from lxml import etree as ET
 from lxml.etree import QName
 
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.standard import ModelicaStandard
 
 
-class Transformation(SSPStandard):
+class Transformation(ModelicaStandard):
 
     def __init__(self, transformation_type=None, attributes=None, transformation: ET.Element = None):
 

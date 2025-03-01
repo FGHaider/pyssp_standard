@@ -16,8 +16,9 @@ def test_unpacking(read_file):
 
 
 def test_add_resource(read_file):
-    test_file = Path('./embrace.ssp')
-    shutil.copy(read_file, test_file)
+    print()
+    test_ssp_file = Path('./embrace.ssp')
+    shutil.copy(read_file, test_ssp_file)
 
     file_to_add = Path('pytest/doc/test.txt')
     with SSP(test_file) as file:
@@ -25,8 +26,10 @@ def test_add_resource(read_file):
         file.add_resource(file_to_add)
         file.remove_resource(file_to_remove)
 
-    with SSP(test_file) as file:
-        assert file_to_add.name in [entry.name for entry in file.resources]
-        assert file_to_remove.name not in [entry.name for entry in file.resources]
+        print(ssp.resources)
 
-    test_file.unlink()
+    with SSP(test_ssp_file) as ssp:
+        assert file_to_add.name in [entry for entry in ssp.resources]
+        assert file_to_remove not in [entry for entry in ssp.resources]
+
+    test_ssp_file.unlink()

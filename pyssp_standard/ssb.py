@@ -2,7 +2,7 @@
 from pyssp_standard.parameter_types import ParameterType
 from pyssp_standard.common_content_ssc import Annotations, Enumerations, Enumeration
 from pyssp_standard.unit import Units
-from pyssp_standard.utils import SSPFile
+from pyssp_standard.utils import ModelicaXMLFile
 from lxml import etree as ET
 from lxml.etree import QName
 from typing import TypedDict
@@ -17,17 +17,21 @@ class DictionaryEntry(TypedDict):
 class DictionaryEntryList(list):
 
     def __repr__(self):
-        print_out = """"""
+        print_out = \
+f"""{'_' *100}
+DictionaryEntryList:"
+"""
         for item in self:
-            print_out += f"""
-        ___________________________________________________________________________________________
-        Name: {item['name']}
-        Type: {item['type_entry']}
-            """
+            print_out += \
+f"""{'_' *20}
+    Name: {item['name']}
+    Type: {item['type_entry']}
+"""
+        print_out += f"{'_' *100}\n"
         return print_out
 
 
-class SSB(SSPFile):
+class SSB(ModelicaXMLFile):
 
     def __init__(self, *args):
         self.version = None
@@ -39,8 +43,8 @@ class SSB(SSPFile):
         super().__init__(*args, identifier='ssb')
 
     def __read__(self):
-        self.__tree = ET.parse(self.file_path, parser=ET.XMLParser(encoding='utf-8'))
-        self.root = self.__tree.getroot()
+        tree = ET.parse(str(self.file_path), parser=ET.XMLParser(encoding='utf-8'))
+        self.root = tree.getroot()
 
         self.version = self.root.get('version')
         dictionary_entries = self.root.findall('ssb:DictionaryEntry', self.namespaces)

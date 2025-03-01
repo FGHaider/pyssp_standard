@@ -1,12 +1,12 @@
 from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
 from pyssp_standard.unit import Units
-from pyssp_standard.utils import SSPFile
-from pyssp_standard.standard import SSPStandard
+from pyssp_standard.utils import ModelicaXMLFile
+from pyssp_standard.standard import ModelicaStandard
 from lxml import etree as ET
 from lxml.etree import QName
 
 
-class Connection(SSPStandard):
+class Connection(ModelicaStandard):
 
     def __init__(self, element=None, *, start_element=None, start_connector=None, end_element=None, end_connector=None):
         self.__root = None
@@ -50,8 +50,11 @@ class Connection(SSPStandard):
         return {'source': self.start_element, 'signal': self.start_connector,
                 'target': self.end_element, 'receiver': self.end_connector}
 
+    def __rep__(self) -> str:
+        return f"""source {self.start_element} - {self.start_connector} -> target {self.end_element} - {self.end_connector}""" 
 
-class Connector(SSPStandard):
+
+class Connector(ModelicaStandard):
 
     def __init__(self, element):
         self.name = ""
@@ -67,8 +70,7 @@ class Connector(SSPStandard):
     def as_dict(self):
         return {'name': self.name, 'kind': self.kind}
 
-
-class Component(SSPStandard):
+class Component(ModelicaStandard):
 
     def __init__(self, element):
         self.component_type = None
@@ -91,7 +93,7 @@ class Component(SSPStandard):
         return {'name': self.name, 'connectors': [connector.as_dict() for connector in self.connectors]}
 
 
-class Element(SSPStandard):
+class Element(ModelicaStandard):
 
     def __init__(self, element):
         self.components = []
@@ -106,32 +108,36 @@ class Element(SSPStandard):
         return [component.as_dict() for component in self.components]
 
 
-class System(SSPStandard):
+class System(ModelicaStandard):
 
     def __init__(self, system_element: ET.Element):
         self.name = None
         self.element = None
-        self.__connections = []
+        self.__connections : list[Connection] = []
 
-        self.connectors = []
+        self.connectors : list[Connector] = []
         self.parameter_bindings = []
         self.signal_dictionaries = []
 
         self.__read__(system_element)
 
     def __read__(self, element):
+        self.name = element.get('name', None)
         elements = element.findall('ssd:Elements', namespaces=self.namespaces)
-        self.element = Element(elements[0])
+        if len(elements) > 0:
+            self.element = Element(elements[0])
+
         connections = element.findall('ssd:Connections', namespaces=self.namespaces)
-        for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
-            self.__connections.append(Connection(connection))
+        if len(connections) > 0:
+            for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
+                self.__connections.append(Connection(connection))
 
     @property
     def connections(self):
         return self.__connections
 
 
-class DefaultExperiment(SSPStandard):
+class DefaultExperiment(ModelicaStandard):
 
     def __init__(self, element: ET.Element = None):
         self.start_time = None
@@ -151,7 +157,7 @@ class DefaultExperiment(SSPStandard):
                 self.annotations.add_annotation(Annotation(annotation))
 
 
-class SSD(SSPFile):
+class SSD(ModelicaXMLFile):
 
     def __init__(self, file_path, mode='r'):
 
@@ -172,8 +178,8 @@ class SSD(SSPFile):
         super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
     def __read__(self):
-        self.__tree = ET.parse(self.file_path)
-        self.root = self.__tree.getroot()
+        tree = ET.parse(str(self.file_path))
+        self.root = tree.getroot()
 
         system = self.root.findall('ssd:System', self.namespaces)[0]
         self.system = System(system)
@@ -184,6 +190,20 @@ class SSD(SSPFile):
 
         self.name = self.root.get('name')
         self.version = self.root.get('version')
+
+    def __write__(self):
+        tree = ET.parse(str(self.file_path))
+        self.root = tree.getroot()
+        system = self.root.findall('ssd:System', self.namespaces)
+        if system is not None:
+            connections_set = system[0].findall('ssd:Connections', self.namespaces)[0]
+            for target in self.connections_to_remove:
+                matching_elements = connections_set.findall('ssd:Connection', namespaces=self.namespaces)
+                for element in matching_elements:
+                    if Connection(element) == target:
+                        element.getparent().remove(element)
+            for add_connection in self.connections_to_add:
+                connections_set.append(add_connection.as_element())
 
     def add_connection(self, connection: Connection):
         if type(connection) is not Connection:
@@ -201,20 +221,22 @@ class SSD(SSPFile):
     def connections(self):
         return self.system.connections
 
-    def list_connections(self, *, source=None, target=None, source_parent=None, target_parent=None):
+    def list_connections(self, *, start_connector=None, end_connector=None, start_element=None, end_element=None):
         connections = self.connections()
         matching_connections = []
-        for connection in connections:
 
-            if source is not None and source != connection.start_connector:
-                continue
-            if source is not None and target != connection.end_connector:
-                continue
-            if source is not None and source_parent != connection.start_element:
-                continue
-            if source is not None and target_parent != connection.end_element:
-                continue
-            matching_connections.append(connection)
+        def check(value, comparision):
+            return True if value is None else value == comparision
+
+        for connection in connections:
+            connection : Connection
+            sc = [start_connector, connection.start_connector]
+            ec = [end_connector, connection.end_connector]
+            se = [start_element, connection.start_element]
+            ee = [end_element, connection.end_element]
+
+            if check(*sc) and check(*ec) and check(*se) and check(*ee):
+                matching_connections.append(connection)
 
         return matching_connections
 
@@ -243,17 +265,3 @@ class SSD(SSPFile):
                 matching_connectors[component['name']].append({'name': connector['name'], 'kind': connector['kind']})
 
         return matching_connectors
-
-    def __write__(self):
-        self.__tree = ET.parse(self.file_path)
-        self.root = self.__tree.getroot()
-        system = self.root.findall('ssd:System', self.namespaces)
-        if system is not None:
-            connections_set = system[0].findall('ssd:Connections', self.namespaces)[0]
-            for target in self.connections_to_remove:
-                matching_elements = connections_set.findall('ssd:Connection', namespaces=self.namespaces)
-                for element in matching_elements:
-                    if Connection(element) == target:
-                        element.getparent().remove(element)
-            for add_connection in self.connections_to_add:
-                connections_set.append(add_connection.as_element())
