@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='pyssp_standard',
     packages=['pyssp_standard'],
-    version='0.7.1',
+    version='0.7.2',
     license='MIT',
     description='Simple python package for reading, modifying and creating files, specified in the SSP Standard',
     long_description='',
@@ -16,7 +16,6 @@ setup(
     install_requires=[
         'lxml',
         'xmlschema',
-        'pytest',
         'pint',
     ],
     classifiers=[
