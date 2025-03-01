@@ -7,7 +7,7 @@ import shutil
 
 @pytest.fixture
 def read_file():
-    return Path("doc/embrace.ssp")
+    return Path("pytest/doc/embrace.ssp")
 
 
 def test_unpacking(read_file):
@@ -19,7 +19,7 @@ def test_add_resource(read_file):
     test_file = Path('./embrace.ssp')
     shutil.copy(read_file, test_file)
 
-    file_to_add = Path('./doc/test.txt')
+    file_to_add = Path('pytest/doc/test.txt')
     with SSP(test_file) as file:
         file_to_remove = file.resources[0]
         file.add_resource(file_to_add)

@@ -7,7 +7,7 @@ from lxml.etree import _Element
 
 @pytest.fixture
 def read_file():
-    return Path("doc/embrace/resources/ECS_HW.ssm")
+    return Path("pytest/doc/embrace/resources/ECS_HW.ssm")
 
 
 @pytest.fixture

@@ -6,12 +6,12 @@ import shutil
 
 @pytest.fixture
 def read_file():
-    return Path("doc/embrace/SystemStructure.ssd")
+    return Path("pytest/doc/embrace/SystemStructure.ssd")
 
 
 @pytest.fixture
 def modify_file():
-    source_path = Path("doc/embrace/SystemStructure.ssd")
+    source_path = Path("pytest/doc/embrace/SystemStructure.ssd")
     test_file = Path("./test.ssd")
     shutil.copy(source_path, test_file)
     yield test_file

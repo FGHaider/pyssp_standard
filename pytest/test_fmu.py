@@ -5,7 +5,7 @@ from pyssp_standard.fmu import FMU
 
 @pytest.fixture
 def read_file():
-    return Path("doc/embrace/resources/0001_ECS_HW.fmu")
+    return Path("pytest/doc/embrace/resources/0001_ECS_HW.fmu")
 
 
 def test_variable_unpacking(read_file):  # Asserts that reading a known correct file does not raise an exception

@@ -20,7 +20,7 @@ def test_create_srmd(write_file):
 
 
 def test_data_assign(write_file):
-    test_file = Path('./doc/embrace/CONOPS.csv')
+    test_file = Path('pytest/doc/embrace/CONOPS.csv')
     with SRMD(write_file, 'w') as file:
         file.assign_data(test_file)
         checksum = file.checksum

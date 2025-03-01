@@ -5,7 +5,7 @@ from pyssp_standard.ssv import SSV
 
 @pytest.fixture
 def read_file():
-    return Path("doc/embrace/resources/RAPID_Systems_2021-03-29_Test_1.ssv")
+    return Path("pytest/doc/embrace/resources/RAPID_Systems_2021-03-29_Test_1.ssv")
 
 
 @pytest.fixture
