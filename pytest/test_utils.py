@@ -7,10 +7,10 @@ from pyssp_standard.utils import ZIPFile
 
 def test_zipfile():
     print()
-    source_file = Path("./doc/embrace.ssp")
+    source_file = Path("pytest/doc/embrace.ssp")
     target_file = Path('./temp_embrace.ssp')
 
-    file_to_add = Path("./test_fmu.py")
+    file_to_add = Path("pytest/test_fmu.py")
     file_to_remove = "resources/0002_ECS_SW.fmu"
 
     with ZIPFile(source_path=source_file, target_path=target_file) as zf:
@@ -22,7 +22,7 @@ def test_zipfile():
         files = zf.files_rel
 
         assert file_to_add.name in files
-        assert f"resources/{file_to_add.name}" in files
+        assert str(Path(f"resources/{file_to_add.name}")) in files
         assert file_to_remove not in [k for k in files]
     
     target_file.unlink()

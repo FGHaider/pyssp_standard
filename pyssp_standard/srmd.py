@@ -89,10 +89,10 @@ class ClassificationEntry(BaseElement, ModelicaStandard):
             entry.set("type", self.type_)
 
         if self.link is not None:  # optional
-            entry.set(QName(self.namespaces["xlink"], "href"), link)
+            entry.set(QName(self.namespaces["xlink"], "href"), self.link)
 
         if self.linked_type is not None:  # optional
-            entry.set("linkedType", linked_type)
+            entry.set("linkedType", self.linked_type)
 
         return entry
 

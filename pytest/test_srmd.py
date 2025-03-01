@@ -18,7 +18,7 @@ def write_file():
 
 def test_read_srmd():
     print()
-    test_file = Path('./doc/test_schema_validation.srmd')
+    test_file = Path('pytest/doc/test_schema_validation.srmd')
     with SRMD(test_file, 'r') as file:
         file.__check_compliance__()
 
@@ -362,7 +362,7 @@ def test_read_write_srmd_custom_parser_xml(write_file):
 
 def test_data_assign(write_file):
     print()
-    test_file = Path('./doc/embrace/CONOPS.csv')
+    test_file = Path('pytest/doc/embrace/CONOPS.csv')
     with SRMD(write_file, 'w') as file:
         file.assign_data(test_file)
         checksum = file.checksum

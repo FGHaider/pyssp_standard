@@ -1,4 +1,0 @@
-<stc:Classification type="com.example.custom">
-    <stc:ClassicationEntry keyword="test1">Värde 1</stc:ClassificationEntry>
-    <stc:ClassicationEntry keyword="test2">Värde 2</stc:ClassificationEntry>
-</stc:Classification>

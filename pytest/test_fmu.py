@@ -6,11 +6,11 @@ from pyssp_standard.fmu import FMU, ModelDescription
 
 @pytest.fixture
 def fmu_file():
-    return Path("doc/embrace/resources/0001_ECS_HW.fmu")
+    return Path("pytest/doc/embrace/resources/0001_ECS_HW.fmu")
 
 @pytest.fixture
 def md_file():
-    return Path("doc/embrace/fmu/modelDescription.xml")
+    return Path("pytest/doc/embrace/fmu/modelDescription.xml")
 
 def test_unpacking_packing(fmu_file):
     print()
