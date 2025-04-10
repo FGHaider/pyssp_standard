@@ -129,8 +129,8 @@ class FMU(ZIPFile):
 
         return self
 
-    def __init__(self, source_path, target_path=None, readonly=False):
-        super().__init__(source_path, target_path, readonly)
+    def __init__(self, source_path, target_path=None, mode="a", readonly=None):
+        super().__init__(source_path, target_path, mode=mode, readonly=readonly)
         self.fmu_binaries_path :Path = None
         self.fmu_documentation_path :Path = None
 

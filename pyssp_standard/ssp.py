@@ -3,6 +3,7 @@ import tempfile
 import zipfile
 import shutil
 from pathlib import Path, PosixPath
+from warnings import deprecated
 
 from pyssp_standard.ssd import SSD
 from pyssp_standard.ssb import SSB
@@ -13,6 +14,32 @@ from pyssp_standard.standard import ModelicaStandard
 from pyssp_standard.utils import ZIPFile
 
 
+class VariantsProxy:
+    archive_root: Path
+    mode: str
+
+    def __init__(self, archive_root: Path, mode: str):
+        self.archive_root = archive_root
+        self.mode = mode
+
+    def __len__(self):
+        return len(self.archive_root.glob("*.ssd"))
+
+    def __contains__(self, name):
+        variant_path = self.archive_root / Path(name).with_suffix(".ssd")
+        return variant_path.is_file()
+
+    def __getitem__(self, name):
+        if name not in self and self.mode == "r":
+            raise KeyError(f"SSD archive has no variant named {name!r}")
+
+        variant_path = self.archive_root / Path(name).with_suffix(".ssd")
+        return SSD(variant_path, mode=self.mode)
+
+    def __iter__(self, name):
+        return iter(self.archive_root.glob("*.ssd"))
+
+
 class SSP(ZIPFile):
 
     def __enter__(self):
@@ -21,8 +48,8 @@ class SSP(ZIPFile):
 
         return self
 
-    def __init__(self, source_path, target_path=None, readonly=False):
-        super().__init__(source_path, target_path, readonly)
+    def __init__(self, source_path, target_path=None, mode="a", readonly=None):
+        super().__init__(source_path, target_path, mode=mode, readonly=readonly)
         self.ssp_resource_path :Path = None
 
     def __rep__(self) -> str:
@@ -36,6 +63,14 @@ SSP:
 {spacing}{spacing.join([str(r) for r in self.resources])}
 {'_'*100}
 """
+
+    @property
+    def system_structure(self):
+        return SSD(self.get_file_temp_path("SystemStructure.ssd"), mode=self.mode)
+
+    @property
+    def variants(self):
+        return VariantsProxy(self.unpacked_path, self.mode)
 
     @property
     def ssd(self):
