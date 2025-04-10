@@ -2,7 +2,7 @@ import datetime
 from typing import TypedDict, List
 from lxml import etree as ET
 from lxml.etree import QName
-from dataclasses import dataclass, asdict, fields
+from dataclasses import dataclass, asdict, fields, field
 
 from pyssp_standard.standard import ModelicaStandard
 
@@ -33,9 +33,9 @@ class Annotation(ModelicaStandard):  # TODO needs to read and not just create
 
 class Annotations(ModelicaStandard):
 
-    def __init__(self):
+    def __init__(self, namespace="ssc"):
         self.__count = 0
-        self.root = ET.Element(QName(self.namespaces['ssc'], 'Annotations'))
+        self.root = ET.Element(QName(self.namespaces[namespace], 'Annotations'))
 
     def add_annotation(self, annotation: Annotation):
         self.__count += 1
@@ -103,25 +103,70 @@ class TopLevelMetaData:
         return root
 
 
-class Item(TypedDict):
+@dataclass
+class Item(ModelicaStandard):
     name: str
     value: int
 
+    @classmethod
+    def from_xml(cls, elem):
+        return cls(elem.get("name"), int(elem.get("value")))
 
-class Enumeration(TypedDict):
-    base_element: BaseElement
+    def to_xml(self):
+        return ET.Element(
+                QName(self.namespaces["ssc"], "Item"),
+                name=self.name,
+                value=str(self.value)
+        )
+
+
+@dataclass
+class Enumeration(ModelicaStandard):
     name: str
     items: List[Item]
-    annotations: Annotations
+    base_element: BaseElement = field(default_factory=BaseElement)
+    annotations: Annotations | None = None
+
+    @classmethod
+    def from_xml(cls, elem):
+        base_elem = BaseElement()
+        base_elem.update(elem.attrib)
+
+        name = elem.get("name")
+        items = [Item.from_xml(el) for el in elem.findall("ssc:Item", cls.namespaces)]
+        # TODO: Annotations
+
+        return cls(name, items, base_elem, None)
+
+    def to_xml(self):
+        elem = ET.Element(QName(self.namespaces["ssc"], "Enumeration"), name=self.name)
+        self.base_element.update_root(elem)
+        elem.extend(item.to_xml() for item in self.items)
+
+        return elem
 
 
 class Enumerations(ModelicaStandard):
+    enumerations: list[Enumeration]
+    namespace: str
 
-    def __init__(self, enumerations: List[Enumeration] = None):
-        self.__root = ET.Element(QName(self.namespaces['ssc'], 'Enumerations'))
-        if enumerations is not None:
-            for enum in enumerations:
-                self.__root.append(enum)
+    def __init__(self, enumerations: List[Enumeration] | ET.ElementBase = None, namespace="ssc"):
+        self.enumerations = []
+        self.namespace = namespace
+        if isinstance(enumerations, ET._Element):
+            self.__read__(enumerations)
+        elif enumerations is not None:
+            self.enumerations.extend(enumerations)
+
+    def __read__(self, element):
+        self.enumerations.extend(Enumeration.from_xml(elem) for elem in element)
+
+    def as_element(self):
+        elem = ET.Element(QName(self.namespaces[self.namespace], 'Enumerations'))
+        for enum in self.enumerations:
+            elem.append(enum.to_xml())
+
+        return elem
 
     def add_enumeration(self, enum: Enumeration):
-        self.__root.append(enum)
+        self.enumerations.append(enum)

@@ -18,7 +18,7 @@ def test_zipfile():
         zf.add_file(file_to_add, "resources")
         zf.remove_file(file_to_remove)
 
-    with ZIPFile(source_path=target_file, readonly=True) as zf:
+    with ZIPFile(source_path=target_file, mode="r") as zf:
         files = zf.files_rel
 
         assert file_to_add.name in files

@@ -3,8 +3,7 @@ import tempfile
 import zipfile
 import shutil
 from pathlib import Path, PosixPath
-from warnings import deprecated
-
+import warnings
 from pyssp_standard.ssd import SSD
 from pyssp_standard.ssb import SSB
 from pyssp_standard.ssv import SSV
@@ -41,27 +40,25 @@ class VariantsProxy:
 
 
 class SSP(ZIPFile):
-
     def __enter__(self):
         super().__enter__()
-        self.ssp_resource_path = self.unpacked_path / 'resources'
+        self.ssp_resource_path = self.unpacked_path / "resources"
 
         return self
 
     def __init__(self, source_path, target_path=None, mode="a", readonly=None):
         super().__init__(source_path, target_path, mode=mode, readonly=readonly)
-        self.ssp_resource_path :Path = None
+        self.ssp_resource_path: Path = None
 
     def __rep__(self) -> str:
         spacing = "\t\t"
-        return \
-f"""{'_'*100}
+        return f"""{"_" * 100}
 SSP:
     Path       {self.file_path}
     Temp_dir:  {self.unpacked_path}
     Resources:
 {spacing}{spacing.join([str(r) for r in self.resources])}
-{'_'*100}
+{"_" * 100}
 """
 
     @property
@@ -74,37 +71,43 @@ SSP:
 
     @property
     def ssd(self):
-        ssd = list(self.unpacked_path.glob('*.ssd'))[0]
+        message = (
+            "The ssd property is deprecated. Use SSP.system_structure to access the default "
+            "variant, and SSP.variants to access other variant SSDs."
+        )
+        warnings.warn(message, DeprecationWarning)
+
+        ssd = list(self.unpacked_path.glob("*.ssd"))[0]
         return SSD(ssd)
 
     @property
     def ssv(self):
-        ssv = list(self.ssp_resource_path.glob('*.ssv'))
+        ssv = list(self.ssp_resource_path.glob("*.ssv"))
         return [SSV(ssv) for ssv in ssv]
 
     @property
     def ssm(self):
-        ssm = list(self.ssp_resource_path.glob('*.ssm'))
+        ssm = list(self.ssp_resource_path.glob("*.ssm"))
         return [SSM(file) for file in ssm]
 
     @property
     def ssb(self):
-        ssb = list(self.ssp_resource_path.glob('*.ssb'))
+        ssb = list(self.ssp_resource_path.glob("*.ssb"))
         return [SSB(file) for file in ssb]
 
     @property
     def fmu(self):
-        fmu = list(self.ssp_resource_path.glob('*.fmu'))
+        fmu = list(self.ssp_resource_path.glob("*.fmu"))
         return [FMU(file) for file in fmu]
 
     @property
     def resources(self):
-        """ 
+        """
         Returns a list of available resources in the ssp folder /resources
         """
         return [f for f in self.get_files(self.ssp_resource_path).keys()]
 
-    def add_resource(self, file :Path):
+    def add_resource(self, file: Path):
         """
         Add something to the resource folder of the ssp.
         :param resource: filepath of the object to add.
@@ -119,4 +122,3 @@ SSP:
             resource_name = resource_name.name
 
         self.remove_file(f"resources/{resource_name}")
-        

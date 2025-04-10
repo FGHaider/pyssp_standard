@@ -1,13 +1,22 @@
+import tempfile
+from pathlib import Path
+import shutil
 
 import pytest
-from pathlib import Path
+
 from pyssp_standard.ssp import SSP
-import shutil
 
 
 @pytest.fixture
 def read_file():
     return Path("pytest/doc/embrace.ssp")
+
+
+@pytest.fixture
+def write_file():
+    with tempfile.NamedTemporaryFile(delete_on_close=False) as f:
+        f.close()
+        yield f.name
 
 
 def test_unpacking(read_file):
@@ -17,10 +26,10 @@ def test_unpacking(read_file):
 
 def test_add_resource(read_file):
     print()
-    test_ssp_file = Path('./embrace.ssp')
+    test_ssp_file = Path("./embrace.ssp")
     shutil.copy(read_file, test_ssp_file)
 
-    file_to_add = Path('pytest/doc/test.txt')
+    file_to_add = Path("pytest/doc/test.txt")
     with SSP(test_ssp_file) as ssp:
         file_to_remove = ssp.resources[0]
         print(file_to_remove)
@@ -34,3 +43,8 @@ def test_add_resource(read_file):
         assert file_to_remove not in [entry for entry in ssp.resources]
 
     test_ssp_file.unlink()
+
+
+def test_create_ssp(write_file):
+    with SSP(write_file, mode="w") as ssp:
+        assert isinstance(ssp, SSP)

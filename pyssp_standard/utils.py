@@ -263,7 +263,6 @@ class ZIPFile:
         archive_dir = self.get_file_temp_path(rel_path)
         archive_dir.mkdir(parents=True, exist_ok=True)  # eqv. to mkdir -p ...
 
-        rel_path = os.path.join(rel_path, os.path.basename(file))
         rel_path = Path(rel_path) / Path(file).name
 
         temp_path = self.get_file_temp_path(rel_path)
