@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Self
 
 from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
 from pyssp_standard.unit import Units
@@ -153,7 +152,7 @@ class Element(ModelicaStandard):
 
 class System(ModelicaStandard):
     name: str
-    elements: list[Component | Self]
+    elements: "list[Component | System]"  # ugly, because of forward declarations. Fixed in py3.14+
     connections: list[Connection]
 
     connectors: list[Connector]
