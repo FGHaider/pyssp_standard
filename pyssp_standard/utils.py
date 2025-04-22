@@ -148,6 +148,8 @@ class ZIPFile:
         if self.mode == "r" or (self.mode == "a" and Path(self.file_path).exists()):
             with zipfile.ZipFile(self.file_path, "r") as zip_ref:
                 zip_ref.extractall(self.__unpacked_path)
+        else:
+            self.__unpacked_path.mkdir()
 
         self.__in_context = True
         return self
