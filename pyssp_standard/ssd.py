@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation
+from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation, TypeChoice, TypeReal
 from pyssp_standard.unit import Units
 from pyssp_standard.utils import ModelicaXMLFile
 from pyssp_standard.standard import ModelicaStandard
@@ -62,9 +62,10 @@ class Connection(ModelicaStandard):
 
 class Connector(ModelicaStandard):
 
-    def __init__(self, element=None, name="", kind=""):
+    def __init__(self, element=None, name="", kind="", type_=TypeReal(None)):
         self.name = name
         self.kind = kind
+        self.type_ = type_
 
         if element is not None:
             self.__read__(element)
@@ -72,6 +73,7 @@ class Connector(ModelicaStandard):
     def __read__(self, element: ET.Element):
         self.name = element.get('name')
         self.kind = element.get('kind')
+        self.type_ = TypeChoice.from_xml(element.xpath(TypeChoice.XPATH_SSP)[0])
 
     def as_element(self):
         elem = ET.Element(
@@ -79,6 +81,7 @@ class Connector(ModelicaStandard):
                 name=self.name,
                 kind=self.kind
         )
+        elem.append(self.type_.to_xml(namespace="ssc"))
 
         return elem
 
@@ -172,7 +175,7 @@ class System(ModelicaStandard):
         self.connectors: list[Connector] = []
         self.parameter_bindings = []
         self.signal_dictionaries = []
-        self.annotations = None
+        self.annotations = Annotations(namespace="ssd")
 
         if system_element is not None:
             self.__read__(system_element)
@@ -198,10 +201,15 @@ class System(ModelicaStandard):
         if elements is not None:
             self.elements = [self.parse_element(child) for child in elements]
 
-        connections = element.findall('ssd:Connections', namespaces=self.namespaces)
-        if len(connections) > 0:
-            for connection in connections[0].findall('ssd:Connection', namespaces=self.namespaces):
+        connections = element.find('ssd:Connections', namespaces=self.namespaces)
+        if connections is not None:
+            for connection in connections.findall('ssd:Connection', namespaces=self.namespaces):
                 self.connections.append(Connection(connection))
+
+        annotations = element.find("ssd:Annotations", namespaces=self.namespaces)
+        if annotations is not None:
+            for elem in annotations:
+                self.annotations.add_annotation(Annotation(elem))
 
     def as_element(self):
         element = ET.Element(QName(self.namespaces["ssd"], "System"), name=self.name)
@@ -222,6 +230,9 @@ class System(ModelicaStandard):
             connections = ET.Element(QName(self.namespaces["ssd"], "Connections"))
             connections.extend(connection.as_element() for connection in self.connections)
             element.append(connections)
+
+        if not self.annotations.is_empty():
+            element.append(self.annotations.element())
 
         return element
 
@@ -269,10 +280,7 @@ class SSD(ModelicaXMLFile):
         self.system = None
         self.default_experiment = None
         self.__enumerations: Enumerations = Enumerations(namespace="ssd")
-        self.__units: Units = Units()
-
-        self.connections_to_add = []
-        self.connections_to_remove = []
+        self.units: Units = Units()
 
         super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
@@ -291,14 +299,13 @@ class SSD(ModelicaXMLFile):
         if len(default_experiment) > 0:
             self.default_experiment = DefaultExperiment(default_experiment[0])
 
-        # Unclear if the namespace should be ssc or ssd
         enumerations = self.root.find("ssd:Enumerations", self.namespaces)
-        if enumerations is None:
-            # If this find succeeds the document is actually invalid
-            enumerations = self.root.find("ssc:Enumerations", self.namespaces)
-
         if enumerations is not None:
             self.__enumerations = Enumerations(enumerations, namespace="ssd")
+
+        units = self.root.find("ssd:Units", self.namespaces)
+        if units is not None:
+            self.units = Units(units)
 
         self.name = self.root.get('name')
         self.version = self.root.get('version')
@@ -306,10 +313,13 @@ class SSD(ModelicaXMLFile):
     def __write__(self):
         # tree = ET.parse(str(self.file_path))
         # self.root = tree.getroot()
+        namespaces = ["ssd", "ssc"]
+        nsmap = {k: self.namespaces[k] for k in namespaces}
         self.root = ET.Element(
                 QName(self.namespaces["ssd"], "SystemStructureDescription"),
                 version=self.version,
-                name=self.name
+                name=self.name,
+                nsmap=nsmap
         )
 
         self.root = self.top_level_metadata.update_root(self.root)
@@ -324,29 +334,19 @@ class SSD(ModelicaXMLFile):
         if self.__enumerations is not None and self.__enumerations.enumerations:
             self.root.append(self.__enumerations.as_element())
 
-        # system = self.root.findall('ssd:System', self.namespaces)
-        # if system is not None:
-        #     connections_set = system[0].findall('ssd:Connections', self.namespaces)[0]
-        #     for target in self.connections_to_remove:
-        #         matching_elements = connections_set.findall('ssd:Connection', namespaces=self.namespaces)
-        #         for element in matching_elements:
-        #             if Connection(element) == target:
-        #                 element.getparent().remove(element)
-        #     for add_connection in self.connections_to_add:
-        #         connections_set.append(add_connection.as_element())
+        if self.units is not None and len(self.units) != 0:
+            self.root.append(self.units.element(parent_type="ssd"))
 
     def add_connection(self, connection: Connection):
         if type(connection) is not Connection:
             raise "Only Connection object may be used."
         self.system.connections.append(connection)
-        self.connections_to_add.append(connection)
 
     def remove_connection(self, connection: Connection):
-        for idx, item in enumerate(self.connections()):
-            if item == connection:
-                self.system.connections.pop(idx)
-                self.connections_to_remove.append(connection)
-                break
+        try:
+            self.system.connections.remove(connection)
+        except ValueError:
+            pass  # Replicate previous behavior
 
     def connections(self):
         return self.system.connections

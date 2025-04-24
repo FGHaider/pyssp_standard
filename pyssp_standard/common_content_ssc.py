@@ -1,6 +1,8 @@
 import datetime
 from typing import TypedDict, List
+from abc import ABC, abstractmethod
 from lxml import etree as ET
+
 from lxml.etree import QName
 from dataclasses import dataclass, asdict, fields, field
 
@@ -170,3 +172,115 @@ class Enumerations(ModelicaStandard):
 
     def add_enumeration(self, enum: Enumeration):
         self.enumerations.append(enum)
+
+
+class TypeChoice(ABC, ModelicaStandard):
+    XPATH_SSP = "ssc:Real|ssc:Integer|ssc:Boolean|ssc:String|ssc:Enumeration"
+    XPATH_FMI = "Real|Integer|Boolean|String|Enumeration"
+
+    @abstractmethod
+    def to_xml(self, namespace="ssc"):
+        ...
+
+    @classmethod
+    def from_xml(cls, elem):
+        name = QName(elem.tag).localname
+        if name == "Real":
+            return TypeReal.from_xml(elem)
+        elif name == "Integer":
+            return TypeInteger.from_xml(elem)
+        elif name == "Boolean":
+            return TypeBoolean.from_xml(elem)
+        elif name == "String":
+            return TypeString.from_xml(elem)
+        elif name == "Enumeration":
+            return TypeEnumeration.from_xml(elem)
+
+
+class TypeReal(TypeChoice):
+    def __init__(self, unit):
+        self.unit = unit
+
+    def to_xml(self, namespace="ssc"):
+        if namespace:
+            ns = f"{{{self.namespaces[namespace]}}}"
+        else:
+            ns = ""
+
+        elem = ET.Element(f"{ns}Real")
+        if self.unit is not None:
+            elem.set("unit", self.unit)
+
+        return elem
+
+    @classmethod
+    def from_xml(cls, elem):
+        return cls(elem.get("unit"))
+
+
+class TypeInteger(TypeChoice):
+    def __init__(self):
+        pass
+
+    def to_xml(self, namespace="ssc"):
+        if namespace:
+            ns = f"{{{self.namespaces[namespace]}}}"
+        else:
+            ns = ""
+
+        return ET.Element(f"{ns}Integer")
+
+    @classmethod
+    def from_xml(cls, elem):
+        return cls()
+
+
+class TypeBoolean(TypeChoice):
+    def __init__(self):
+        pass
+
+    def to_xml(self, namespace="ssc"):
+        if namespace:
+            ns = f"{{{self.namespaces[namespace]}}}"
+        else:
+            ns = ""
+
+        return ET.Element(f"{ns}Boolean")
+
+    @classmethod
+    def from_xml(cls, elem):
+        return cls()
+
+
+class TypeString(TypeChoice):
+    def __init__(self):
+        pass
+
+    def to_xml(self, namespace="ssc"):
+        if namespace:
+            ns = f"{{{self.namespaces[namespace]}}}"
+        else:
+            ns = ""
+
+        return ET.Element(f"{ns}String")
+
+    @classmethod
+    def from_xml(cls, elem):
+        return cls()
+
+
+class TypeEnumeration(TypeChoice):
+    def __init__(self, name):
+        self.name = name
+
+    def to_xml(self, namespace="ssc"):
+        if namespace:
+            ns = f"{{{self.namespaces[namespace]}}}"
+        else:
+            ns = ""
+
+        return ET.Element(f"{ns}Enumeration", name=self.name)
+
+    @classmethod
+    def from_xml(cls, elem):
+        return cls(elem.get("name"))

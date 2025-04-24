@@ -21,7 +21,7 @@ def modify_file():
 
 @pytest.fixture
 def write_file():
-    with tempfile.NamedTemporaryFile(delete_on_close=False) as f:
+    with tempfile.NamedTemporaryFile(delete=False) as f:
         f.close()
         yield f.name
 

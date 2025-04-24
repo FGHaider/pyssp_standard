@@ -37,47 +37,72 @@ class BaseUnit:
 class Unit(SSPElement, ModelicaStandard):
 
     def __init__(self, unit, base_unit: BaseUnit = None):
+        self.name = None
+        self.base_unit = None
 
-        self.__root = None
-        self.__name = None
-        self.__base_unit = None
-
-        if type(unit) is ET.Element:
+        if isinstance(unit, ET._Element):
             self.from_element(unit)
         else:
-            self.__name = unit
-            self.__base_unit = base_unit
+            self.name = unit
+            self.base_unit = base_unit
 
-    def to_element(self):
-        unit_entry = ET.Element(QName(self.namespaces['ssc'], 'Unit'), attrib={'name': self.__name})
-        unit_entry.append(ET.Element(QName(self.namespaces['ssc'], 'BaseUnit'), attrib=self.__base_unit.to_dict()))
+    def to_element(self, namespace="ssc"):
+        ns = "" if not namespace else f"{{{self.namespaces[namespace]}}}"
+
+        unit_entry = ET.Element(f"{ns}Unit", attrib={'name': self.name})
+        ET.SubElement(
+            unit_entry,
+            f"{ns}BaseUnit",
+            **self.base_unit.to_dict()
+        )
+
         return unit_entry
 
     def from_element(self, element):
-        self.__name = element.attrib.get('name')
-        base_unit = element.findall('BaseUnit')[0]
-        self.__base_unit = BaseUnit(base_unit.attrib)
+        self.name = element.attrib.get('name')
+        ns = QName(element.tag).namespace
+        tag_name = "ssc:BaseUnit" if ns is not None else "BaseUnit"
+
+        base_unit = element.find(tag_name, self.namespaces)
+        if base_unit is not None:  # Base unit is optional
+            self.base_unit = BaseUnit(base_unit.attrib)
 
 
 class Units(ModelicaStandard):
 
     def __init__(self, element: ET.Element = None):
-        self.__units = []
-        self.__root = None
+        self.units = []
 
         if element is not None:
-            units = element.findall('Unit', self.namespaces)
+            namespace = "ssc:"
+            if element.tag == "UnitDefinitions":  # Detect FMI ModelDefinition
+                namespace = ""
+
+            units = element.findall(f"{namespace}Unit", self.namespaces)
             for unit in units:
-                self.__units.append(Unit(unit))
+                self.units.append(Unit(unit, namespace))
 
     def add_unit(self, unit: Unit):
-        self.__units.append(unit)
+        self.units.append(unit)
 
     def element(self, parent_type='ssc'):
-        self.__root = ET.Element(QName(self.namespaces[parent_type], 'Units'))
-        for unit in self.__units:
-            self.__root.append(unit.to_element())
-        return self.__root
+        if parent_type == "fmi":
+            elem_name = "UnitDefinitions"
+            child_ns = None
+        else:
+            elem_name = QName(self.namespaces[parent_type], "Units")
+            child_ns = "ssc"
+
+        root = ET.Element(elem_name)
+        root.extend(unit.to_element(namespace=child_ns) for unit in self.units)
+
+        return root
+
+    def __len__(self):
+        return len(self.units)
+
+    def __getitem__(self, idx):
+        return self.units[idx]
 
     def is_empty(self):
-        return True if len(self.__units) == 0 else False
+        return True if len(self.units) == 0 else False
