@@ -73,7 +73,7 @@ class Connector(ModelicaStandard):
     def __read__(self, element: ET.Element):
         self.name = element.get('name')
         self.kind = element.get('kind')
-        self.type_ = TypeChoice.from_xml(element.xpath(TypeChoice.XPATH_SSP)[0])
+        self.type_ = TypeChoice.from_xml(TypeChoice.XPATH_SSP(element)[0])
 
     def as_element(self):
         elem = ET.Element(
@@ -311,8 +311,6 @@ class SSD(ModelicaXMLFile):
         self.version = self.root.get('version')
 
     def __write__(self):
-        # tree = ET.parse(str(self.file_path))
-        # self.root = tree.getroot()
         namespaces = ["ssd", "ssc"]
         nsmap = {k: self.namespaces[k] for k in namespaces}
         self.root = ET.Element(

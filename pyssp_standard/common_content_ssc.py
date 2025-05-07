@@ -174,8 +174,13 @@ class Enumerations(ModelicaStandard):
         self.enumerations.append(enum)
 
 
+_prefix = f"{{{ModelicaStandard.namespaces['ssc']}}}"
+
+
 class TypeChoice(ABC, ModelicaStandard):
-    XPATH_SSP = "ssc:Real|ssc:Integer|ssc:Boolean|ssc:String|ssc:Enumeration"
+    XPATH_SSP = ET.ETXPath("|".join(_prefix + type_ for type_ in
+            ["Real", "Integer", "Boolean", "String", "Enumeration"]))
+
     XPATH_FMI = "Real|Integer|Boolean|String|Enumeration"
 
     @abstractmethod
