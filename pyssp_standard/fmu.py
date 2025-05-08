@@ -146,8 +146,8 @@ class FMU(ZIPFile):
 
     def __init__(self, source_path, target_path=None, mode="a", readonly=None):
         super().__init__(source_path, target_path, mode=mode, readonly=readonly)
-        self.fmu_binaries_path :Path = None
-        self.fmu_documentation_path :Path = None
+        self.fmu_binaries_path: Path = None
+        self.fmu_documentation_path: Path = None
 
     def __str__(self) -> str:
         nl = "\t\n - "

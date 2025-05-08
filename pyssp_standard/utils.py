@@ -155,7 +155,7 @@ class ZIPFile:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if not self.mode == "r" and self.__changed:
+        if self.mode != "r" and self.__changed:
             zip_file_path = shutil.make_archive(self.__unpacked_path, "zip", self.__unpacked_path)
             shutil.copy(zip_file_path, self.save_path)
 
@@ -204,6 +204,9 @@ class ZIPFile:
         self.__in_context = False
         self.__temp_path = ""
         self.__unpacked_path = ""
+
+    def mark_changed(self):
+        self.__changed = True
 
     def check_context(self):
         if not self.__in_context:
@@ -260,7 +263,7 @@ class ZIPFile:
         if self.mode == "r":
             raise Exception("Changes are not allowed in readonly archive")
 
-        self.__changed = True
+        self.mark_changed()
         # Create subdirectory if it doesn't already exist
         archive_dir = self.get_file_temp_path(rel_path)
         archive_dir.mkdir(parents=True, exist_ok=True)  # eqv. to mkdir -p ...
@@ -283,7 +286,7 @@ class ZIPFile:
         if self.mode == "r":
             raise Exception("Changes are not allowed in readonly archive")
 
-        self.__changed = True
+        self.mark_changed()
         file: Path = self.__unpacked_path / rel_path
 
         if file.exists():

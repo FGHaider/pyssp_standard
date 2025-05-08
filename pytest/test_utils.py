@@ -24,5 +24,5 @@ def test_zipfile():
         assert file_to_add.name in files
         assert str(Path(f"resources/{file_to_add.name}")) in files
         assert file_to_remove not in [k for k in files]
-    
+
     target_file.unlink()

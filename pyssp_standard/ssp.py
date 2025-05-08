@@ -63,10 +63,12 @@ SSP:
 
     @property
     def system_structure(self):
+        self.mark_changed()
         return SSD(self.get_file_temp_path("SystemStructure.ssd"), mode=self.mode)
 
     @property
     def variants(self):
+        self.mark_changed()
         return VariantsProxy(self.unpacked_path, self.mode)
 
     @property
@@ -77,26 +79,31 @@ SSP:
         )
         warnings.warn(message, DeprecationWarning)
 
+        self.mark_changed()
         ssd = list(self.unpacked_path.glob("*.ssd"))[0]
         return SSD(ssd)
 
     @property
     def ssv(self):
+        self.mark_changed()
         ssv = list(self.ssp_resource_path.glob("*.ssv"))
         return [SSV(ssv) for ssv in ssv]
 
     @property
     def ssm(self):
+        self.mark_changed()
         ssm = list(self.ssp_resource_path.glob("*.ssm"))
         return [SSM(file) for file in ssm]
 
     @property
     def ssb(self):
+        self.mark_changed()
         ssb = list(self.ssp_resource_path.glob("*.ssb"))
         return [SSB(file) for file in ssb]
 
     @property
     def fmu(self):
+        self.mark_changed()
         fmu = list(self.ssp_resource_path.glob("*.fmu"))
         return [FMU(file) for file in fmu]
 
