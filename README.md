@@ -13,6 +13,50 @@ In addition to the SSP standard the SRMD standard is also supported.
 ## Documentation
 Here follows a number of examples of how to use the library.
 
+### SSD
+
+#### Example
+Example code for creating an SSP wrapper around an FMU.
+```python
+connectors = []
+with FMU(fmu_path) as fmu:
+    connectors.extend(
+        (scalar.name, "output", scalar.type_) for scalar in fmu.model_description.outputs
+    )
+    connectors.extend(
+        (scalar.name, "input", scalar.type_) for scalar in fmu.model_description.inputs
+    )
+    units = fmu.model_description.units
+
+with SSP(ssp_path, mode="w") as ssp:
+    with ssp.system_structure as ssd:
+        component = Component(None)
+        component.component_type = "application/x-fmu-sharedlibrary"
+        component.name = name
+        component.source = str(Path("resources") / Path(fmu_path).name)
+        component.implementation = "CoSimulation"
+
+        ssd.system = System(None, "system")
+        for con_name, con_kind, con_type in connectors:
+            ssd.system.connectors.append(Connector(None, con_name, con_kind, con_type))
+            component.connectors.append(Connector(None, con_name, con_kind, con_type))
+
+            ssd.system.connections.append(
+                Connection(
+                    start_element=None,
+                    start_connector=con_name,
+                    end_element=name,
+                    end_connector=con_name,
+                )
+            )
+
+        ssd.system.elements.append(component)
+        ssd.name = "root"
+        ssd.version = "1.0"
+        ssd.units = units
+
+    ssp.add_resource(fmu_path)
+```
 
 ### SSV 
 
