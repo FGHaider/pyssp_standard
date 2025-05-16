@@ -200,6 +200,8 @@ class TypeChoice(ABC, ModelicaStandard):
             return TypeString.from_xml(elem)
         elif name == "Enumeration":
             return TypeEnumeration.from_xml(elem)
+        else:
+            raise ValueError("Element is not a valid type choice element.")
 
 
 class TypeReal(TypeChoice):
