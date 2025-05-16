@@ -277,6 +277,30 @@ class ZIPFile:
             # This shouldn't fail silently
             raise FileExistsError(f"File {rel_path} already exists in archive")
 
+    def add_file_contents(self, content: str | bytes, rel_path: Path, overwrite=False):
+        """
+        Add something to the resource folder of the ssp.
+        :param content: Contents of the file to write as a str or bytes object.
+        :param rel_path: relative path inside archive, omitt '/' in the beginning
+        :param overwrite: if True, overwrite file in archive if it already exists
+        """
+        self.check_context()
+        if self.mode == "r":
+            raise Exception("Changes are not allowed in readonly archive")
+
+        self.mark_changed()
+        # Create subdirectory if it doesn't alreeshutil.copy(file, temp_path)dy exist
+        archive_dir = self.get_file_temp_path(rel_path.parent)
+        archive_dir.mkdir(parents=True, exist_ok=True)  # eqv. to mkdir -p ...
+
+        temp_path = self.get_file_temp_path(rel_path)
+        if overwrite or not temp_path.exists():
+            with open(temp_path, "w" if isinstance(content, str) else "wb") as f:
+                f.write(content)
+        else:
+            # This shouldn't fail silently
+            raise FileExistsError(f"File {rel_path} already exists in archive")
+
     def remove_file(self, rel_path):
         """
         relative path should be within the file, no slash in the begining

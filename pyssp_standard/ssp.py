@@ -33,10 +33,15 @@ class VariantsProxy:
             raise KeyError(f"SSD archive has no variant named {name!r}")
 
         variant_path = self.archive_root / Path(name).with_suffix(".ssd")
+
+        mode = self.mode
+        if mode == "a":
+            mode = "a" if variant_path.exists() else "w"
+
         return SSD(variant_path, mode=self.mode)
 
-    def __iter__(self, name):
-        return iter(self.archive_root.glob("*.ssd"))
+    def __iter__(self):
+        return (path.stem for path in self.archive_root.glob("*.ssd"))
 
 
 class SSP(ZIPFile):
@@ -64,7 +69,16 @@ SSP:
     @property
     def system_structure(self):
         self.mark_changed()
-        return SSD(self.get_file_temp_path("SystemStructure.ssd"), mode=self.mode)
+        ssd_path = self.get_file_temp_path("SystemStructure.ssd")
+
+        if self.mode == "r" and not ssd_path.exists():
+            raise FileNotFoundError("SystemStructure.ssd not found in unpacked archive")
+
+        mode = self.mode
+        if mode == "a":
+            mode = "a" if ssd_path.exists() else "w"
+
+        return SSD(ssd_path, mode=mode)
 
     @property
     def variants(self):
