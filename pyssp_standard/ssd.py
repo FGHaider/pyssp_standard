@@ -73,7 +73,8 @@ class Connector(ModelicaStandard):
     def __read__(self, element: ET.Element):
         self.name = element.get('name')
         self.kind = element.get('kind')
-        self.type_ = TypeChoice.from_xml(TypeChoice.XPATH_SSP(element)[0])
+        type_elem = TypeChoice.XPATH_SSP(element)
+        self.type_ = TypeChoice.from_xml(type_elem[0]) if type_elem else None
 
     def as_element(self):
         elem = ET.Element(
