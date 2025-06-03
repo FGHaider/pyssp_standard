@@ -69,3 +69,5 @@ def test_units_fmi_to_ssp():
     assert len(unit_elem) == 1
     base_elem = unit_elem[0]
     assert base_elem.tag == QName(ModelicaStandard.namespaces["ssc"], "BaseUnit")
+    assert base_elem.get("kg") == "1"
+    assert base_elem.get("m") == "2"

@@ -51,10 +51,10 @@ class Unit(SSPElement, ModelicaStandard):
 
         unit_entry = ET.Element(f"{ns}Unit", attrib={'name': self.name})
 
-        if self.base_unit is not None:
-            if namespace == "ssc":
-                self.base_unit = BaseUnit({})  # In FMI BaseUnit is optional, in SSP it is required
+        if namespace == "ssc" and self.base_unit is None:
+            self.base_unit = BaseUnit({})  # In FMI BaseUnit is optional, in SSP it is required
 
+        if self.base_unit is not None:
             ET.SubElement(
                 unit_entry,
                 f"{ns}BaseUnit",
