@@ -7,6 +7,8 @@ from lxml import etree as et
 
 from pyssp_standard.standard import ModelicaStandard
 from pyssp_standard.utils import ModelicaXMLFile, ZIPFile
+from pyssp_standard.unit import Units
+from pyssp_standard.common_content_ssc import TypeChoice
 
 
 @dataclass
@@ -15,6 +17,7 @@ class ScalarVariable:
     description: str
     causality: str
     variability: str
+    type_: TypeChoice
 
 
 class VariableList(list):
@@ -58,6 +61,7 @@ ModelDescription:
         self.__variables: VariableList[ScalarVariable] = VariableList()
         self.model_name = None
         self.fmi_version = None
+        self.units = None
 
         super().__init__(file_path, mode, "fmi30")
 
@@ -76,9 +80,20 @@ ModelDescription:
             description = scalar.get('description')
             causality = scalar.get('causality')
             variability = scalar.get('variability')
-            scalar_variable = ScalarVariable(name=name, description=description,
-                                             variability=variability, causality=causality)
+            type_ = TypeChoice.from_xml(scalar.xpath(TypeChoice.XPATH_FMI)[0])
+            scalar_variable = ScalarVariable(
+                name=name,
+                description=description,
+                variability=variability,
+                causality=causality,
+                type_=type_,
+            )
             self.__variables.append(scalar_variable)
+
+        unit_defs = root.find("UnitDefinitions")
+        if unit_defs is not None:
+            self.units = Units(unit_defs)
+
 
     def __write__(self):
         pass
@@ -129,10 +144,10 @@ class FMU(ZIPFile):
 
         return self
 
-    def __init__(self, source_path, target_path=None, readonly=False):
-        super().__init__(source_path, target_path, readonly)
-        self.fmu_binaries_path :Path = None
-        self.fmu_documentation_path :Path = None
+    def __init__(self, source_path, target_path=None, mode="a", readonly=None):
+        super().__init__(source_path, target_path, mode=mode, readonly=readonly)
+        self.fmu_binaries_path: Path = None
+        self.fmu_documentation_path: Path = None
 
     def __str__(self) -> str:
         nl = "\t\n - "
@@ -146,9 +161,9 @@ FMU:
 
     @property
     def model_description(self):
-        md = list(self.unpacked_path.glob('modelDescription.xml'))[0]
+        md = self.unpacked_path / "modelDescription.xml"
         return ModelDescription(md)
-    
+
     @property
     def binaries(self):
         """ 
