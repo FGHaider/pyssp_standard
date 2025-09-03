@@ -162,7 +162,7 @@ class System(ModelicaStandard):
     connectors: list[Connector]
     parameter_bindings: list
     signal_dictionaries: list
-    annotations: Annotation | None
+    annotations: Annotations | None
 
     def __init__(
             self,
