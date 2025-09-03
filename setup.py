@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='pyssp_standard',
     packages=['pyssp_standard'],
-    version='0.8.1',
+    version='0.8.2',
     license='MIT',
     description='Simple python package for reading, modifying and creating files, specified in the SSP Standard',
     long_description='',
@@ -18,6 +18,7 @@ setup(
         'xmlschema',
         'pint',
     ],
+    package_data={"pyssp_standard": ["resources/*.xsd", "resources/fmi30/*.xsd"]},
     classifiers=[
         'Development Status :: 3 - Alpha',
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
