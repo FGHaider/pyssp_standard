@@ -62,6 +62,13 @@ class SSB(ModelicaXMLFile):
             dictionary_entry.append(entry["type_entry"].element())
             self.root.append(dictionary_entry)
 
+    @property
+    def identifier(self):
+        if self.version == "2.0":
+            return "ssb2"
+        else:
+            return "ssb"
+
     def add_dictionary_entry(self, name: str, ptype: str, value: dict, annotations=None):
         self.__dictionary_entry.append(DictionaryEntry(name=name,
                                                        type_entry=ParameterType(ptype, value, 'ssc'),

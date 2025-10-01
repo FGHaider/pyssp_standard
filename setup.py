@@ -18,7 +18,7 @@ setup(
         'xmlschema',
         'pint',
     ],
-    package_data={"pyssp_standard": ["resources/*.xsd", "resources/fmi30/*.xsd"]},
+    package_data={"pyssp_standard": ["resources/*.xsd", "resources/fmi30/*.xsd", "resources/ssp2/*.xsd"]},
     classifiers=[
         'Development Status :: 3 - Alpha',
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
