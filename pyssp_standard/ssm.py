@@ -34,7 +34,7 @@ f"""{'_'*20}
 class SSM(ModelicaXMLFile):
 
     def __init__(self, *args):
-        self.__version: str
+        self.version = "1.0"
         self.__mappings: MappingList[MappingEntry] = MappingList()
 
         super().__init__(*args, identifier='ssm')
@@ -53,6 +53,7 @@ Parameter Mapping:
         self.root = tree.getroot()
         self.top_level_metadata.update(self.root.attrib)
         self.base_element.update(self.root.attrib)
+        self.version = self.root.get("version")
 
         mappings = self.root.findall('ssm:MappingEntry', self.namespaces)
         for entry in mappings:
@@ -76,7 +77,7 @@ Parameter Mapping:
 
     def __write__(self):
 
-        self.root = et.Element(QName(self.namespaces['ssm'], 'ParameterMapping'), attrib={'version': '1.0'})
+        self.root = et.Element(QName(self.namespaces['ssm'], 'ParameterMapping'), attrib={'version': self.version})
         self.root = self.top_level_metadata.update_root(self.root)
         self.root = self.base_element.update_root(self.root)
 
@@ -92,6 +93,13 @@ Parameter Mapping:
                 annotation_element = mapping['annotations'].root
                 if annotation_element is not None:
                     mapping_entry.append(annotation_element)
+
+    @property
+    def identifier(self):
+        if self.version == "2.0":
+            return "ssm2"
+        else:
+            return "ssm"
 
     @property
     def mappings(self):

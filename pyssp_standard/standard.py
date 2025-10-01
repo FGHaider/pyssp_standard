@@ -27,6 +27,13 @@ class ModelicaStandard:
         "ssm": __resource_path / "SystemStructureParameterMapping.xsd",
         "ssv": __resource_path / "SystemStructureParameterValues.xsd",
         "ssb": __resource_path / "SystemStructureSignalDictionary.xsd",
+        # SSP 2.0
+        "ssc2": __resource_path / "ssp2" / "SystemStructureCommon.xsd",
+        "ssd2": __resource_path / "ssp2" / "SystemStructureDescription.xsd",
+        "ssd2_11": __resource_path / "ssp2" / "SystemStructureDescription11.xsd",
+        "ssm2": __resource_path / "ssp2" / "SystemStructureParameterMapping.xsd",
+        "ssv2": __resource_path / "ssp2" / "SystemStructureParameterValues.xsd",
+        "ssb2": __resource_path / "ssp2" / "SystemStructureSignalDictionary.xsd",
         # SSPTraceabillity
         "stc11": __resource_path / "STC11.xsd",
         "srmd11": __resource_path / "SRMD11.xsd",

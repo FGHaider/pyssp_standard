@@ -336,6 +336,13 @@ class SSD(ModelicaXMLFile):
         if self.units is not None and len(self.units) != 0:
             self.root.append(self.units.element(parent_type="ssd"))
 
+    @property
+    def identifier(self):
+        if self.version == "2.0":
+            return "ssd2_11"
+        else:
+            return "ssd11"
+
     def add_connection(self, connection: Connection):
         if type(connection) is not Connection:
             raise "Only Connection object may be used."
