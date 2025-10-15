@@ -32,12 +32,13 @@ class SSV(ModelicaXMLFile):
             self.__parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
 
         units = self.root.findall('ssv:Units', self.namespaces)
+        self.version = self.root.get("version")
         if len(units) > 0:
             self.__units = Units(units[0])
 
     def __write__(self):
         self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'),
-                               attrib={'version': '1.0', 'name': self.__name})
+                               attrib={'version': self.version, 'name': self.__name})
         self.root = self.top_level_metadata.update_root(self.root)
         self.root = self.base_element.update_root(self.root)
 
@@ -55,8 +56,16 @@ class SSV(ModelicaXMLFile):
         self.__enumerations: Enumerations = Enumerations()
         self.__units: Units = Units()
         self.__name = name
+        self.version = "1.0"
 
         super().__init__(file_path=filepath, mode=mode, identifier='ssv')
+
+    @property
+    def identifier(self):
+        if self.version == "2.0":
+            return "ssv2"
+        else:
+            return "ssv"
 
     @property
     def parameters(self):
