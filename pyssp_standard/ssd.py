@@ -7,6 +7,34 @@ from pyssp_standard.standard import ModelicaStandard
 from lxml import etree as ET
 from lxml.etree import QName
 
+_ALLOWED_CONNECTIONS = {
+    ("System", "parameter", "System", "calculatedParameter"),
+    ("System", "parameter", "System", "output"),
+    ("System", "input", "System", "output"),
+    ("System", "parameter", "Element", "parameter"),
+    ("System", "parameter", "Element", "input"),
+    ("System", "parameter", "Element", "inout"),
+    ("System", "input", "Element", "input"),
+    ("System", "input", "Element", "inout"),
+    ("Element", "calculatedParameter", "Element", "parameter"),
+    ("Element", "calculatedParameter", "Element", "input"),
+    ("Element", "calculatedParameter", "Element", "inout"),
+    ("Element", "output", "Element", "input"),
+    ("Element", "output", "Element", "inout"),
+    ("Element", "inout", "Element", "input"),
+    ("Element", "calculatedParameter", "System", "calculatedParameter"),
+    ("Element", "calcualtedParameter", "System", "output"),
+    ("Element", "output", "System", "output"),
+    ("Element", "inout", "System", "output"),
+}
+
+_DESTINATIONS = {
+    ("Element", "input"),
+    ("Element", "parameter"),
+    ("System", "output"),
+    ("System", "calculatedParameter"),
+}
+
 
 class Connection(ModelicaStandard):
 
@@ -237,6 +265,90 @@ class System(ModelicaStandard):
 
         return element
 
+    def check_connections(
+        self,
+        unallowed_connections=True,
+        ambiguous_data_flow=True,
+        unconnected_inputs=False,
+        connector_not_in_system=False
+    ):
+        """Check connection semantics
+
+        Args:
+        unallowed_connections: if True, return warnings about
+            connections involving combinations not allowed by the SSP
+            standard, e.g. element output -> element output.
+        ambiguous_data_flow: if True, return warnings about input
+            connectors having multiple inbound connections.
+        unconnected_inputs, if True, return warnings about input
+            connectors lacking any inbound connections. False by default
+            since this is not an error according to the SSP standard.
+        connector_not_in_system: if True, return warnings about connection
+            start or end connector not being present in the system.
+
+
+        Return: list of warning strings
+        """
+        connector_kind: dict[tuple[str, str], str] = {}
+        connector_owner: dict[tuple[str, str], str] = {}
+
+        inbound = {}
+
+        for connector in self.connectors:
+            connector_kind[(None, connector.name)] = connector.kind
+            connector_owner[(None, connector.name)] = "System"
+
+            if ("System", connector.kind) in _DESTINATIONS:
+                inbound[("", connector.name)] = []
+
+        for element in self.elements:
+            for connector in element.connectors:
+                connector_kind[(element.name, connector.name)] = connector.kind
+                connector_owner[(element.name, connector.name)] = "Element"
+
+                if ("Element", connector.kind) in _DESTINATIONS:
+                    inbound[(element.name, connector.name)] = []
+
+        warnings = []
+
+        for connection in self.connections:
+            source = (connection.start_element, connection.start_connector)
+            dest = (connection.end_element, connection.end_connector)
+            source_owner_kind = (connector_owner[source], connector_kind[source])
+            dest_owner_kind = (connector_owner[dest], connector_kind[dest])
+
+            if (*source_owner_kind, *dest_owner_kind) in _ALLOWED_CONNECTIONS:
+                pass  # Allowed connection, data flow from start -> end
+            elif (*dest_owner_kind, *source_owner_kind) in _ALLOWED_CONNECTIONS:
+                # Allowed connection, data flow from end -> start
+                source, dest = dest, source
+                source_owner_kind, dest_owner_kind = dest_owner_kind, source_owner_kind
+            elif unallowed_connections:
+                warnings.append(f"Unallowed connection combination: {source[0]}.{source[1]} "
+                    f"({source_owner_kind[0]} {source_owner_kind[1]}) -> "
+                    f"{dest[0]}.{dest[1]} ({dest_owner_kind[0]} {dest_owner_kind[1]})")
+
+            if source not in connector_kind and connector_not_in_system:
+                warnings.append(f"Source connector not found in system for connection: "
+                    f"{source[0]}.{source[1]} -> {dest[0]}.{dest[1]}")
+            if dest not in connector_kind and connector_not_in_system:
+                warnings.append(f"Destination connector not found in system for connection: "
+                    f"{source[0]}.{source[1]} -> {dest[0]}.{dest[1]}")
+
+            if dest in inbound:
+                inbound[dest].append(source)
+
+        for connector, inbound_connectors in inbound.items():
+            if len(inbound_connectors) == 0 and unconnected_inputs:
+                warnings.append("Input connector has no inbound connections: "
+                    f"{connector[0]}.{connector[1]}")
+            elif len(inbound_connectors) > 1 and ambiguous_data_flow:
+                connectors = ", ".join(f"{con[0]}.{con[1]}" for con in inbound_connectors)
+                warnings.append(f"Input connector {connector[0]}.{connector[1]} has ambiguous "
+                f"dataflow (multiple inbound connections): {connectors}")
+
+        return warnings
+
 
 class DefaultExperiment(ModelicaStandard):
 
@@ -342,6 +454,9 @@ class SSD(ModelicaXMLFile):
             return "ssd2_11"
         else:
             return "ssd11"
+
+    def check_connections(self, **kwargs):
+        return self.system.check_connections(**kwargs)
 
     def add_connection(self, connection: Connection):
         if type(connection) is not Connection:
