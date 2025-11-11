@@ -8,7 +8,14 @@ from lxml import etree as et
 from pyssp_standard.standard import ModelicaStandard
 from pyssp_standard.utils import ModelicaXMLFile, ZIPFile
 from pyssp_standard.unit import Units
-from pyssp_standard.common_content_ssc import TypeChoice
+from pyssp_standard.common_content_ssc import (
+    TypeChoice,
+    Enumeration,
+    TypeReal,
+    TypeInteger,
+    TypeBoolean,
+    TypeString,
+)
 
 
 @dataclass
@@ -39,6 +46,61 @@ f"""{'_'*20}
         return print_out
 
 
+class SimpleType:
+    name: str
+    description: str
+    type_: Enumeration | TypeReal | TypeInteger | TypeBoolean | TypeString
+    kind: str
+
+    def __init__(self, name, type_, description=None, kind=None):
+        self.name = name
+        self.type_ = type_
+        self.description = description
+        self.kind = kind
+
+    @classmethod
+    def from_xml(cls, elem):
+        name = elem.get("name")
+        description = elem.get("description")
+        type_kind = elem[0].tag
+        if type_kind == "Real":
+            type_ = TypeReal.from_xml(elem[0])
+        elif type_kind == "Integer":
+            type_ = TypeInteger.from_xml(elem[0])
+        elif type_kind == "Boolean":
+            type_ = TypeBoolean.from_xml(elem[0])
+        elif type_kind == "String":
+            type_ = TypeString.from_xml(elem[0])
+        elif type_kind == "Enumeration":
+            type_ = Enumeration.from_xml_fmi(name, description, elem[0])
+        else:
+            raise ValueError("Element is not a valid type choice element.")
+
+        return cls(name, type_, description, type_kind)
+
+
+class TypeDefinitions:
+    types: list[Enumeration | TypeReal | TypeInteger | TypeBoolean | TypeString]
+
+    def __init__(self, types):
+        self.types = types
+
+    def __len__(self):
+        return len(self.types)
+
+    def __getitem__(self, idx):
+        return self.types[idx]
+
+    def __setitem__(self, idx, val):
+        self.types[idx] = val
+
+    @classmethod
+    def from_xml(cls, elem):
+        children = elem.findall("SimpleType")
+
+        return cls([SimpleType.from_xml(child) for child in children])
+
+
 class ModelDescription(ModelicaXMLFile):
     """
     
@@ -62,6 +124,7 @@ ModelDescription:
         self.model_name = None
         self.fmi_version = None
         self.units = None
+        self.type_defs = None
 
         super().__init__(file_path, mode, "fmi30")
 
@@ -94,6 +157,9 @@ ModelDescription:
         if unit_defs is not None:
             self.units = Units(unit_defs)
 
+        type_defs = root.find("TypeDefinitions")
+        if type_defs is not None:
+            self.type_defs = TypeDefinitions.from_xml(type_defs)
 
     def __write__(self):
         pass

@@ -142,6 +142,8 @@ class Component(ModelicaStandard):
             for connector in connectors.findall('ssd:Connector', namespaces=self.namespaces):
                 self.connectors.append(Connector(connector))
 
+        self.parameter_bindings = element.find("ssd:ParameterBindings", namespaces=self.namespaces)
+
     def as_element(self):
         element = ET.Element(QName(self.namespaces["ssd"], "Component"), name=self.name)
 
@@ -160,6 +162,9 @@ class Component(ModelicaStandard):
                 connectors.append(connector.as_element())
 
             element.append(connectors)
+
+        if self.parameter_bindings is not None:
+            element.append(self.parameter_bindings)
 
         return element
 
@@ -392,13 +397,14 @@ class SSD(ModelicaXMLFile):
 
         self.system = None
         self.default_experiment = None
-        self.__enumerations: Enumerations = Enumerations(namespace="ssd")
+        self.enumerations: Enumerations = Enumerations(namespace="ssd")
         self.units: Units = Units()
 
         super().__init__(file_path=file_path, mode=mode, identifier='ssd')
 
     def __read__(self):
-        tree = ET.parse(str(self.file_path))
+        parser = ET.XMLParser(remove_blank_text=True)
+        tree = ET.parse(str(self.file_path), parser)
         self.root = tree.getroot()
 
         self.top_level_metadata.update(self.root.attrib)
@@ -414,7 +420,7 @@ class SSD(ModelicaXMLFile):
 
         enumerations = self.root.find("ssd:Enumerations", self.namespaces)
         if enumerations is not None:
-            self.__enumerations = Enumerations(enumerations, namespace="ssd")
+            self.enumerations = Enumerations(enumerations, namespace="ssd")
 
         units = self.root.find("ssd:Units", self.namespaces)
         if units is not None:
@@ -442,8 +448,8 @@ class SSD(ModelicaXMLFile):
         if self.default_experiment is not None:
             self.root.append(self.default_experiment.as_element())
 
-        if self.__enumerations is not None and self.__enumerations.enumerations:
-            self.root.append(self.__enumerations.as_element())
+        if self.enumerations is not None and self.enumerations.enumerations:
+            self.root.append(self.enumerations.as_element())
 
         if self.units is not None and len(self.units) != 0:
             self.root.append(self.units.element(parent_type="ssd"))
