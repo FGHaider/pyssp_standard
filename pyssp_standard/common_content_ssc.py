@@ -182,6 +182,9 @@ class Enumerations(ModelicaStandard):
     def add_enumeration(self, enum: Enumeration):
         self.enumerations.append(enum)
 
+    def is_empty(self):
+        return len(self.enumerations) == 0
+
 
 _prefix = f"{{{ModelicaStandard.namespaces['ssc']}}}"
 

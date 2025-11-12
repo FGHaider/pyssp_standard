@@ -133,4 +133,4 @@ class Units(ModelicaStandard):
         return key in self.units
 
     def is_empty(self):
-        return True if len(self.units) == 0 else False
+        return len(self.units) == 0
