@@ -2,6 +2,7 @@ import shutil
 import tempfile
 import zipfile
 import itertools
+from datetime import datetime
 from pathlib import Path, PosixPath
 from dataclasses import dataclass
 from lxml import etree as et
@@ -121,7 +122,7 @@ class ModelDescription(ModelicaXMLFile):
     copyright: str | None
     license: str | None
     generation_tool: str | None
-    generation_date_and_time: str | None
+    generation_date_and_time: datetime | None
     variable_naming_convention: str | None
 
     def __repr__(self):
@@ -151,6 +152,9 @@ ModelDescription:
         for name in self.__annotations__:
             xml_name = _to_camel_case(name)
             setattr(self, name, root.get(xml_name))
+
+        if self.generation_date_and_time is not None:
+            self.generation_date_and_time = datetime.fromisoformat(self.generation_date_and_time)
 
         model_variables = root.findall('ModelVariables')[0]
         scalar_variables = model_variables.findall('ScalarVariable')
