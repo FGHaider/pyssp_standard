@@ -213,7 +213,7 @@ class ParameterBinding(ModelicaStandard):
 
         type_ = elem.get("type", "application/x-ssp-parameter-set")
         source = elem.get("source")
-        source_base = elem.get("sourceBase")
+        source_base = elem.get("sourceBase", "SSD")
         prefix = elem.get("prefix")
         parameter_values = elem.find("ssd:ParameterValues", cls.namespaces)
         ssv = None
@@ -233,7 +233,7 @@ class ParameterBinding(ModelicaStandard):
         if self.source is not None:
             root.set("source", self.source)
 
-        if self.source != "SSD":
+        if self.source_base != "SSD":
             root.set("sourceBase", self.source_base)
 
         if self.prefix is not None:
@@ -317,6 +317,13 @@ class System(ModelicaStandard):
             connectors.extend(connector.as_element() for connector in self.connectors)
             element.append(connectors)
 
+        if self.parameter_bindings:
+            parameter_bindings = ET.SubElement(
+                element,
+                QName(self.namespaces["ssd"], "ParameterBindings")
+            )
+            parameter_bindings.extend(binding.to_xml() for binding in self.parameter_bindings)
+
         if self.elements:
             elements = ET.Element(QName(self.namespaces["ssd"], "Elements"))
             elements.extend(el.as_element()
@@ -331,13 +338,6 @@ class System(ModelicaStandard):
 
         if not self.annotations.is_empty():
             element.append(self.annotations.element())
-
-        if self.parameter_bindings:
-            parameter_bindings = ET.SubElement(
-                element,
-                QName(self.namespaces["ssd"], "ParameterBindings")
-            )
-            parameter_bindings.extend(binding.to_xml() for binding in self.parameter_bindings)
 
         return element
 
