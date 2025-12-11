@@ -36,6 +36,12 @@ def test_variable_unpacking(md_file):  # Asserts that reading a known correct fi
     assert len(outputs) > 0
     assert len(parameters) > 0
 
+
+def test_attrs(md_file):
+    with ModelDescription(md_file) as md:
+        assert md.generation_tool is not None and md.generation_tool.startswith("Dymola")
+
+
 def test_get_variables(md_file):
     with ModelDescription(md_file) as file:
         no_matches = file.get('none', 'none')
