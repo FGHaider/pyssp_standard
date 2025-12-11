@@ -154,7 +154,7 @@ ModelDescription:
             setattr(self, name, root.get(xml_name))
 
         if self.generation_date_and_time is not None:
-            self.generation_date_and_time = datetime.fromisoformat(self.generation_date_and_time)
+            self.generation_date_and_time = datetime.fromisoformat(self.generation_date_and_time.strip("Z"))
 
         model_variables = root.findall('ModelVariables')[0]
         scalar_variables = model_variables.findall('ScalarVariable')
