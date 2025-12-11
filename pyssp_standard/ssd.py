@@ -1,9 +1,18 @@
 from collections import defaultdict
+from dataclasses import dataclass, field
 
-from pyssp_standard.common_content_ssc import Enumerations, Annotations, Annotation, TypeChoice, TypeReal
+from pyssp_standard.common_content_ssc import (
+    Enumerations,
+    Annotations,
+    Annotation,
+    TypeChoice,
+    TypeReal,
+    BaseElement
+)
 from pyssp_standard.unit import Units
 from pyssp_standard.utils import ModelicaXMLFile
 from pyssp_standard.standard import ModelicaStandard
+from pyssp_standard.ssv import SSVElem
 from lxml import etree as ET
 from lxml.etree import QName
 
@@ -187,13 +196,63 @@ class Element(ModelicaStandard):
         return [component.as_dict() for component in self.components]
 
 
+@dataclass
+class ParameterBinding(ModelicaStandard):
+    base_element: BaseElement = field(default_factory=BaseElement)
+    type: str = "application/x-ssp-parameter-set"
+    source: str | None = None
+    source_base: str = "SSD"
+    prefix: str | None = None
+    ssv: SSVElem | None = field(default_factory=SSVElem)
+    # TODO: support for parameter mapping
+
+    @classmethod
+    def from_xml(cls, elem):
+        base_element = BaseElement()
+        base_element.update(elem.attrib)
+
+        type_ = elem.get("type", "application/x-ssp-parameter-set")
+        source = elem.get("source")
+        source_base = elem.get("sourceBase")
+        prefix = elem.get("prefix")
+        parameter_values = elem.find("ssd:ParameterValues", cls.namespaces)
+        ssv = None
+        if parameter_values is not None:
+            ssv = parameter_values.find("ssv:ParameterSet", cls.namespaces)
+
+        return cls(base_element, type_, source, source_base, prefix, ssv)
+
+    def to_xml(self):
+        root = ET.Element(
+            QName(self.namespaces['ssd'], 'ParameterBinding'),
+        )
+        self.base_element.update(root.attrib)
+        if self.type != "application/x-ssp-parameter-set":
+            root.set("type", self.type)
+
+        if self.source is not None:
+            root.set("source", self.source)
+
+        if self.source != "SSD":
+            root.set("sourceBase", self.source_base)
+
+        if self.prefix is not None:
+            root.set("prefix", self.prefix)
+
+        if self.ssv is not None:
+            parameter_values = ET.SubElement(root, QName(self.namespaces["ssd"], "ParameterValues"))
+            parameter_values.append(self.ssv.to_xml())
+
+        return root
+
+
 class System(ModelicaStandard):
     name: str
     elements: "list[Component | System]"  # ugly, because of forward declarations. Fixed in py3.14+
     connections: list[Connection]
 
     connectors: list[Connector]
-    parameter_bindings: list
+    parameter_bindings: list[ParameterBinding]
     signal_dictionaries: list
     annotations: Annotations | None
 
@@ -245,6 +304,11 @@ class System(ModelicaStandard):
             for elem in annotations:
                 self.annotations.add_annotation(Annotation(elem))
 
+        parameter_bindings = element.find("ssd:ParameterBindings", namespaces=self.namespaces)
+        if parameter_bindings is not None:
+            bindings = parameter_bindings.findall("ssd:ParameterBinding", namespaces=self.namespaces)
+            self.parameter_bindings = [ParameterBinding.from_xml(binding) for binding in bindings]
+
     def as_element(self):
         element = ET.Element(QName(self.namespaces["ssd"], "System"), name=self.name)
 
@@ -267,6 +331,13 @@ class System(ModelicaStandard):
 
         if not self.annotations.is_empty():
             element.append(self.annotations.element())
+
+        if self.parameter_bindings:
+            parameter_bindings = ET.SubElement(
+                element,
+                QName(self.namespaces["ssd"], "ParameterBindings")
+            )
+            parameter_bindings.extend(binding.to_xml() for binding in self.parameter_bindings)
 
         return element
 
