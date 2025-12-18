@@ -280,11 +280,17 @@ class SRMD(ModelicaXMLFile):
             attributes['checksum'] = self.checksum
             attributes['checksumType'] = self.checksum_type
 
-        self.root = et.Element(QName(self.namespaces['srmd'], 'SimulationResourceMetaData'), attrib=attributes)
+        self.root = et.Element(
+                QName(self.namespaces['srmd'], 'SimulationResourceMetaData'),
+                attrib=attributes,
+        )
+
         self.root = self.top_level_metadata.update_root(self.root)
         self.root = self.base_element.update_root(self.root)
         for classification in self.classifications:
             self.root.append(classification.as_element())
+
+        et.cleanup_namespaces(self.root, top_nsmap=self.namespaces)
 
     def add_classification(self, classification: Classification):
         self.classifications.append(classification)
