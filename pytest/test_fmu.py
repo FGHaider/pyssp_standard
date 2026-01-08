@@ -1,5 +1,6 @@
 import shutil
 import pytest
+from datetime import datetime
 from pathlib import Path
 from pyssp_standard.fmu import FMU, ModelDescription
 
@@ -35,6 +36,13 @@ def test_variable_unpacking(md_file):  # Asserts that reading a known correct fi
     assert len(inputs) > 0
     assert len(outputs) > 0
     assert len(parameters) > 0
+
+
+def test_attrs(md_file):
+    with ModelDescription(md_file) as md:
+        assert md.generation_tool is not None and md.generation_tool.startswith("Dymola")
+        assert isinstance(md.generation_date_and_time, datetime)
+
 
 def test_get_variables(md_file):
     with ModelDescription(md_file) as file:

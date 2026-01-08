@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 import zipfile
+import itertools
+from datetime import datetime
 from pathlib import Path, PosixPath
 from dataclasses import dataclass
 from lxml import etree as et
@@ -101,10 +103,27 @@ class TypeDefinitions:
         return cls([SimpleType.from_xml(child) for child in children])
 
 
+def _to_camel_case(snake_case):
+    """Convert from snake_case to camelCase"""
+
+    parts = snake_case.split("_")
+    return "".join(itertools.chain(parts[:1], (part.capitalize() for part in parts[1:])))
+
+
 class ModelDescription(ModelicaXMLFile):
-    """
-    
-    """
+    """FMI Model Description"""
+
+    fmi_version: str
+    model_name: str
+    guid: str
+    description: str | None
+    author: str | None
+    version: str | None
+    copyright: str | None
+    license: str | None
+    generation_tool: str | None
+    generation_date_and_time: datetime | None
+    variable_naming_convention: str | None
 
     def __repr__(self):
         return \
@@ -117,14 +136,12 @@ ModelDescription:
 """
 
     def __init__(self, file_path, mode='r'):
-
-        self.guid = None
-
         self.__variables: VariableList[ScalarVariable] = VariableList()
-        self.model_name = None
-        self.fmi_version = None
-        self.units = None
         self.type_defs = None
+        self.units = None
+
+        for name in self.__annotations__:
+            setattr(self, name, None)
 
         super().__init__(file_path, mode, "fmi30")
 
@@ -132,9 +149,12 @@ ModelDescription:
         tree = et.parse(str(self.file_path))
         root = tree.getroot()
 
-        self.guid = root.get('guid')
-        self.model_name = root.get('modelName')
-        self.fmi_version = root.get('fmiVersion')
+        for name in self.__annotations__:
+            xml_name = _to_camel_case(name)
+            setattr(self, name, root.get(xml_name))
+
+        if self.generation_date_and_time is not None:
+            self.generation_date_and_time = datetime.fromisoformat(self.generation_date_and_time.strip("Z"))
 
         model_variables = root.findall('ModelVariables')[0]
         scalar_variables = model_variables.findall('ScalarVariable')
