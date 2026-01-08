@@ -1,12 +1,16 @@
-from lxml import etree as ET
+from dataclasses import dataclass, field, fields
 from typing import TypedDict, List
-from lxml.etree import QName
+from operator import attrgetter
 
-from pyssp_standard.common_content_ssc import Enumerations
+from lxml.etree import QName
+from lxml import etree as ET
+
+from pyssp_standard.common_content_ssc import Enumerations, BaseElement, TopLevelMetaData
 from pyssp_standard.parameter_types import ParameterType
 
 from pyssp_standard.unit import BaseUnit, Unit, Units
 from pyssp_standard.utils import ModelicaXMLFile
+from pyssp_standard.standard import ModelicaStandard
 from pyssp_standard.unit_conversion import generate_base_unit
 
 
@@ -16,48 +20,105 @@ class Parameter(TypedDict):
     type_value: ParameterType
 
 
-class SSV(ModelicaXMLFile):
+@dataclass
+class SSVElem(ModelicaStandard):
+    name: str = "default"
+    version: str = "1.0"
+    parameters: list[Parameter] = field(default_factory=list)
+    units: Units | None = field(default_factory=Units)
+    enumerations: Enumerations | None = field(default_factory=Enumerations)
+    base_element: BaseElement = field(default_factory=BaseElement)
+    top_level_metadata: TopLevelMetaData = field(default_factory=TopLevelMetaData)
 
-    def __read__(self):
-        tree = ET.parse(str(self.file_path))
-        self.root = tree.getroot()
+    @classmethod
+    def from_xml(cls, elem):
+        parameters = []
 
-        parameters = self.root.findall('ssv:Parameters', self.namespaces)
-        parameter_set = parameters[0].findall('ssv:Parameter', self.namespaces)
-        for parameter in parameter_set:
-            name = parameter.attrib.get('name')
-            param = list(parameter)[0]
-            param_type = param.tag.split('}')[-1]
-            param_attr = ParameterType(param_type, param.attrib)
-            self.__parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
+        parameters_elem = elem.find('ssv:Parameters', cls.namespaces)
+        if parameters_elem is not None:
+            parameter_elems = parameters_elem.findall('ssv:Parameter', cls.namespaces)
+            for parameter in parameter_elems:
+                name = parameter.get('name')
+                param = parameter[0]
+                param_type = QName(param.tag).localname
+                param_attr = ParameterType(param_type, param.attrib)
+                parameters.append(Parameter(name=name, type_name=param_type, type_value=param_attr))
 
-        units = self.root.findall('ssv:Units', self.namespaces)
-        self.version = self.root.get("version")
-        if len(units) > 0:
-            self.__units = Units(units[0])
+        version = elem.get("version")
+        name = elem.get("name")
+        base_element = BaseElement()
+        top_level_metadata = TopLevelMetaData()
 
-    def __write__(self):
-        self.root = ET.Element(QName(self.namespaces['ssv'], 'ParameterSet'),
-                               attrib={'version': self.version, 'name': self.__name})
-        self.root = self.top_level_metadata.update_root(self.root)
-        self.root = self.base_element.update_root(self.root)
+        base_element.update(elem.attrib)
+        top_level_metadata.update(elem.attrib)
 
-        parameters_entry = ET.SubElement(self.root, QName(self.namespaces['ssv'], 'Parameters'))
-        for param in self.__parameters:
+        units_elem = elem.find('ssv:Units', cls.namespaces)
+        units = Units(units_elem) if units_elem is not None else None
+
+        enums_elem = elem.find("ssv:Enumerations", cls.namespaces)
+        enumerations = Enumerations(enums_elem, namespace="ssv") if enums_elem is not None else None
+
+        return cls(name, version, parameters, units, enumerations)
+
+    def to_xml(self):
+        namespaces = ["ssv", "ssc"]
+        nsmap = {k: self.namespaces[k] for k in namespaces}
+        root = ET.Element(
+            QName(self.namespaces['ssv'], 'ParameterSet'),
+            nsmap=nsmap,
+            attrib={'version': self.version, 'name': self.name}
+        )
+        self.base_element.update(root.attrib)
+        self.top_level_metadata.update(root.attrib)
+
+        parameters_entry = ET.SubElement(root, QName(self.namespaces['ssv'], 'Parameters'))
+        for param in self.parameters:
             parameter_entry = ET.SubElement(parameters_entry, QName(self.namespaces['ssv'], 'Parameter'),
                                             attrib={'name': param.get('name')})
             parameter_entry.append(param["type_value"].element())
 
-        if not self.__units.is_empty():
-            self.root.append(self.__units.element('ssv'))
+        if not self.units.is_empty():
+            root.append(self.units.element('ssv'))
+
+        if self.enumerations is not None and not self.enumerations.is_empty():
+            root.append(self.enumerations.as_element())
+
+        return root
+
+
+def wraps_dataclass(wrapped_class, local_name):
+    def decorator(cls):
+        for field_ in fields(wrapped_class):
+            name = field_.name
+
+            def setter(self, value):
+                setattr(self, f"{local_name}.{name}", value)
+
+            setattr(cls, name, property(attrgetter(f"{local_name}.{name}"), setter))
+
+        return cls
+
+    return decorator
+
+
+@wraps_dataclass(SSVElem, local_name="ssv_elem")
+class SSV(ModelicaXMLFile):
+    name: str
+    version: str
+    parameters: list[Parameter]
+    units: Units | None
+    enumerations: Enumerations | None
+
+    def __read__(self):
+        tree = ET.parse(str(self.file_path))
+        self.root = tree.getroot()
+        self.ssv_elem = SSVElem.from_xml(self.root)
+
+    def __write__(self):
+        self.root = self.ssv_elem.to_xml()
 
     def __init__(self, filepath, mode='r', name='unnamed'):
-        self.__parameters: List[Parameter] = []
-        self.__enumerations: Enumerations = Enumerations()
-        self.__units: Units = Units()
-        self.__name = name
-        self.version = "1.0"
-
+        self.ssv_elem = SSVElem()
         super().__init__(file_path=filepath, mode=mode, identifier='ssv')
 
     @property
@@ -66,14 +127,6 @@ class SSV(ModelicaXMLFile):
             return "ssv2"
         else:
             return "ssv"
-
-    @property
-    def parameters(self):
-        return self.__parameters
-
-    @property
-    def units(self):
-        return self.__units
 
     def add_parameter(self, parname: str, ptype: str = 'Real', *, value: float = None, name: str = None, mimetype=None,
                       unit: str = None):
@@ -87,7 +140,7 @@ class SSV(ModelicaXMLFile):
         if unit is not None:
             parameter_dict['unit'] = unit
         p = Parameter(name=parname, type_name=ptype, type_value=ParameterType(ptype, parameter_dict))
-        self.__parameters.append(p)
+        self.parameters.append(p)
 
     def add_unit(self, name: str, base_unit: dict = None):
         """
@@ -97,4 +150,4 @@ class SSV(ModelicaXMLFile):
         """
         if base_unit is None:
             base_unit = generate_base_unit(name)
-        self.__units.add_unit(Unit(name, base_unit=BaseUnit(base_unit)))
+        self.units.add_unit(Unit(name, base_unit=BaseUnit(base_unit)))

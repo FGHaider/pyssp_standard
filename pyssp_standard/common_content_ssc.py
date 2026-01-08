@@ -138,6 +138,17 @@ class Enumeration(ModelicaStandard):
 
         return cls(name, items, base_elem, None)
 
+    @classmethod
+    def from_xml_fmi(cls, name, description, elem):
+        base_elem = BaseElement()
+        if description is not None:
+            base_elem.description = description
+
+        items = [Item.from_xml(el) for el in elem.findall("Item")]
+        # TODO: Annotations
+
+        return cls(name, items, base_elem, None)
+
     def to_xml(self):
         elem = ET.Element(QName(self.namespaces["ssc"], "Enumeration"), name=self.name)
         self.base_element.update_root(elem)
@@ -170,6 +181,9 @@ class Enumerations(ModelicaStandard):
 
     def add_enumeration(self, enum: Enumeration):
         self.enumerations.append(enum)
+
+    def is_empty(self):
+        return len(self.enumerations) == 0
 
 
 _prefix = f"{{{ModelicaStandard.namespaces['ssc']}}}"
@@ -299,13 +313,22 @@ class TypeEnumeration(TypeChoice):
         self.name = name
 
     def to_xml(self, namespace="ssc"):
+        kwargs = {}
         if namespace:
             ns = f"{{{self.namespaces[namespace]}}}"
-        else:
+            kwargs["name"] = self.name
+        else:  # fmi
             ns = ""
+            kwargs["declaredType"] = self.name
 
-        return ET.Element(f"{ns}Enumeration", name=self.name)
+        return ET.Element(f"{ns}Enumeration", **kwargs)
 
     @classmethod
     def from_xml(cls, elem):
-        return cls(elem.get("name"))
+        # Parse fmi enums with attr declaredType
+        ns = QName(elem.tag).namespace
+        if ns is None:  # fmi
+            name = elem.get("declaredType")
+        else:  # ssp
+            name = elem.get("name")
+        return cls(name)
