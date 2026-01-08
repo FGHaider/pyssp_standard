@@ -128,12 +128,16 @@ SSP:
         """
         return [f for f in self.get_files(self.ssp_resource_path).keys()]
 
-    def add_resource(self, file: Path):
+    def add_resource(self, file: Path, overwrite: bool | None = None):
         """
         Add something to the resource folder of the ssp.
-        :param resource: filepath of the object to add.
+        :param file: filepath of the object to add.
+        :param overwrite: if True, overwrite resource, if False,
+            FileExistsError is raised if attempting to add resource
+            which already exists in the archive.
         """
-        self.add_file(file, "resources")
+        kwargs = {"overwrite": overwrite} if overwrite is not None else {}
+        self.add_file(file, "resources", **kwargs)
 
     def remove_resource(self, resource_name):
         """
