@@ -1,4 +1,5 @@
 import shutil
+import filecmp
 import tempfile
 from pathlib import Path, PosixPath
 from abc import ABC, abstractmethod
@@ -133,6 +134,13 @@ class ModelicaXMLFile(XMLFile, ModelicaStandard):
         self.__identifier = identifier
         self.__annotations = Annotations()
         super().__init__(file_path, mode)
+
+
+def _is_file_content_equal(path: Path | str, content: str | bytes) -> bool:
+    """Return true if file specified by path is equal to content."""
+    mode = "r" if isinstance(content, str) else "rb"
+    with open(path, mode) as f:
+        return f.read() == content
 
 
 class ZIPFile:
@@ -271,7 +279,7 @@ class ZIPFile:
         rel_path = Path(rel_path) / Path(file).name
 
         temp_path = self.get_file_temp_path(rel_path)
-        if overwrite or not temp_path.exists():
+        if overwrite or not temp_path.exists() or filecmp.cmp(file, temp_path, shallow=False):
             shutil.copy(file, temp_path)
         else:
             # This shouldn't fail silently
@@ -294,7 +302,7 @@ class ZIPFile:
         archive_dir.mkdir(parents=True, exist_ok=True)  # eqv. to mkdir -p ...
 
         temp_path = self.get_file_temp_path(rel_path)
-        if overwrite or not temp_path.exists():
+        if overwrite or not temp_path.exists() or _is_file_content_equal(temp_path, content):
             with open(temp_path, "w" if isinstance(content, str) else "wb") as f:
                 f.write(content)
         else:
